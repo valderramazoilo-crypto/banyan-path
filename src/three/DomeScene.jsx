@@ -7,32 +7,39 @@ import { banyan } from './progressStore'
 
 const GOLDEN = Math.PI * (3 - Math.sqrt(5))
 const lerp = THREE.MathUtils.lerp
-const R = 2.05 // sphere radius (smaller)
+const R = 2.05
+const hash = (n) => {
+  const s = Math.sin(n * 127.1) * 43758.5453
+  return s - Math.floor(s)
+}
 
-// A full sphere clad in dark glossy orbs. A light follows the cursor — the orbs
-// facing it light up — and it spins slowly. Premium studio reflections + bloom.
 function OrbSphere() {
   const spin = useRef()
   const mesh = useRef()
   const { camera } = useThree()
 
-  const { dirs, scales } = useMemo(() => {
+  // even full-sphere distribution + per-orb size, twinkle phase & amplitude
+  const orbs = useMemo(() => {
     const N = 760
     const dirs = []
     const scales = []
+    const phase = []
+    const amp = []
     for (let i = 0; i < N; i++) {
       const y = 1 - (i / (N - 1)) * 2
       const r = Math.sqrt(Math.max(0, 1 - y * y))
       const phi = i * GOLDEN
       dirs.push(new THREE.Vector3(Math.cos(phi) * r, y, Math.sin(phi) * r))
-      scales.push(0.125 + (Math.sin(i * 12.9898) * 0.5 + 0.5) * 0.028)
+      scales.push(0.1 + hash(i + 0.5) * 0.085) // wider size variation
+      phase.push(hash(i * 2.3))
+      amp.push(0.55 + hash(i * 4.7) * 0.45)
     }
-    return { dirs, scales }
+    return { dirs, scales, phase, amp }
   }, [])
 
   const dummy = useMemo(() => new THREE.Object3D(), [])
   const baseCol = useMemo(() => new THREE.Color('#0d1410'), [])
-  const hotCol = useMemo(() => new THREE.Color('#FF9E30'), [])
+  const hotCol = useMemo(() => new THREE.Color('#FFB347'), [])
   const tmpCol = useMemo(() => new THREE.Color(), [])
 
   const raycaster = useMemo(() => new THREE.Raycaster(), [])
@@ -43,6 +50,7 @@ function OrbSphere() {
   const toCam = useRef(new THREE.Vector3())
 
   useLayoutEffect(() => {
+    const { dirs, scales } = orbs
     dirs.forEach((d, i) => {
       dummy.position.copy(d).multiplyScalar(R)
       dummy.scale.setScalar(scales[i])
@@ -52,10 +60,11 @@ function OrbSphere() {
     })
     mesh.current.instanceMatrix.needsUpdate = true
     if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true
-  }, [dirs, scales, dummy, baseCol])
+  }, [orbs, dummy, baseCol])
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime
+    const { dirs, scales, phase, amp } = orbs
     if (spin.current) {
       spin.current.rotation.y += delta * 0.1
       spin.current.rotation.x = lerp(spin.current.rotation.x, -banyan.pointerY * 0.22, 0.04)
@@ -65,7 +74,6 @@ function OrbSphere() {
     ndc.set(banyan.pointerX, -banyan.pointerY)
     raycaster.setFromCamera(ndc, camera)
     if (raycaster.ray.intersectSphere(sphere, hitPt.current)) {
-      // drive the cursor light: float just in front of the touched orb
       toCam.current.copy(camera.position).sub(hitPt.current).normalize()
       banyan.lightX = hitPt.current.x + toCam.current.x * 1.8
       banyan.lightY = hitPt.current.y + toCam.current.y * 1.8
@@ -78,13 +86,16 @@ function OrbSphere() {
     for (let i = 0; i < dirs.length; i++) {
       const d = dirs[i]
       const prox = THREE.MathUtils.smoothstep(d.dot(cdir), 0.86, 1.0)
-      const wave = 0.5 + 0.5 * Math.sin(t * 1.3 + (d.x + d.y + d.z) * 2.5)
-      const pop = prox * 0.16 + wave * 0.01
+      // random self-lighting twinkle — only a sparse few peak at any moment
+      const tw = Math.sin(t * 0.7 + phase[i] * Math.PI * 2)
+      const twinkle = THREE.MathUtils.smoothstep(0.965, 1.0, tw) * amp[i]
+      const heat = Math.max(prox * 0.8, twinkle)
+      const pop = prox * 0.16 + twinkle * 0.05 + Math.sin(t * 1.1 + i) * 0.004
       dummy.position.copy(d).multiplyScalar(R + pop)
-      dummy.scale.setScalar(scales[i] + prox * 0.06)
+      dummy.scale.setScalar(scales[i] + prox * 0.06 + twinkle * 0.03)
       dummy.updateMatrix()
       mesh.current.setMatrixAt(i, dummy.matrix)
-      tmpCol.copy(baseCol).lerp(hotCol, prox * 0.7)
+      tmpCol.copy(baseCol).lerp(hotCol, heat)
       mesh.current.setColorAt(i, tmpCol)
     }
     mesh.current.instanceMatrix.needsUpdate = true
@@ -93,19 +104,33 @@ function OrbSphere() {
 
   return (
     <group ref={spin}>
-      <instancedMesh ref={mesh} args={[undefined, undefined, dirs.length]}>
+      <instancedMesh ref={mesh} args={[undefined, undefined, orbs.dirs.length]}>
         <sphereGeometry args={[1, 24, 24]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.72} roughness={0.3} envMapIntensity={0.9} />
+        <meshStandardMaterial
+          color="#ffffff"
+          metalness={0.7}
+          roughness={0.3}
+          envMapIntensity={1.0}
+          emissive="#FF9E30"
+          emissiveIntensity={0.22}
+        />
       </instancedMesh>
+      {/* bright core that lights the orbs from within */}
       <mesh>
-        <sphereGeometry args={[R - 0.2, 64, 64]} />
-        <meshBasicMaterial color="#FF9E30" toneMapped={false} />
+        <sphereGeometry args={[R - 0.18, 64, 64]} />
+        <meshBasicMaterial color="#FFAE3D" toneMapped={false} />
       </mesh>
+      {/* soft volumetric haze — deep glow bleeding outward */}
+      <mesh>
+        <sphereGeometry args={[R * 1.55, 48, 48]} />
+        <meshBasicMaterial color="#FF9E30" transparent opacity={0.06} side={THREE.BackSide} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
+      {/* point light at the core so the inner glow truly influences the orbs */}
+      <pointLight position={[0, 0, 0]} intensity={14} color="#FFB35a" distance={R * 2.4} decay={2} />
     </group>
   )
 }
 
-// point light that tracks the cursor's 3D position
 function CursorLight() {
   const ref = useRef()
   const target = useMemo(() => new THREE.Vector3(), [])
@@ -115,10 +140,9 @@ function CursorLight() {
       ref.current.position.lerp(target, 0.18)
     }
   })
-  return <pointLight ref={ref} intensity={60} color="#fff0d6" distance={15} decay={1.7} />
+  return <pointLight ref={ref} intensity={85} color="#fff0d6" distance={16} decay={1.6} />
 }
 
-// drifting micro-particles in the background
 function MicroParticles({ count = 1100 }) {
   const ref = useRef()
   const positions = useMemo(() => {
@@ -142,7 +166,7 @@ function MicroParticles({ count = 1100 }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.018} color="#d6e0b4" transparent opacity={0.5} depthWrite={false} sizeAttenuation />
+      <pointsMaterial size={0.02} color="#e2e8c4" transparent opacity={0.55} depthWrite={false} sizeAttenuation />
     </points>
   )
 }
@@ -163,7 +187,7 @@ export default function DomeScene() {
       className="hero-canvas"
       style={{
         background:
-          'radial-gradient(125% 90% at 50% 12%, #2b2f1d 0%, #14180e 38%, #080a06 68%, #040503 100%)',
+          'radial-gradient(125% 90% at 50% 12%, #2f3320 0%, #161a0f 38%, #090b06 68%, #040503 100%)',
       }}
     >
       <Canvas
@@ -172,13 +196,12 @@ export default function DomeScene() {
           antialias: true,
           alpha: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15,
+          toneMappingExposure: 1.2,
         }}
         camera={{ position: [0, 0.2, 7.8], fov: 42, near: 0.1, far: 100 }}
       >
-        <fog attach="fog" args={['#080a06', 9, 24]} />
-        <ambientLight intensity={0.12} />
-        <pointLight position={[-5, 2, 4]} intensity={10} color="#FF9E30" distance={26} />
+        <fog attach="fog" args={['#090b06', 9, 24]} />
+        <ambientLight intensity={0.1} />
         <CursorLight />
 
         <Environment resolution={256}>
@@ -192,8 +215,8 @@ export default function DomeScene() {
         <MicroParticles />
         <CameraRig />
         <EffectComposer>
-          <Bloom intensity={1.2} luminanceThreshold={0.22} luminanceSmoothing={0.9} mipmapBlur />
-          <Vignette eskil={false} offset={0.16} darkness={0.95} />
+          <Bloom intensity={1.6} radius={0.85} luminanceThreshold={0.17} luminanceSmoothing={0.9} mipmapBlur />
+          <Vignette eskil={false} offset={0.16} darkness={0.96} />
         </EffectComposer>
       </Canvas>
     </div>
