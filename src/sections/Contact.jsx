@@ -1,3 +1,5 @@
+import Logo from '../components/Logo'
+
 export default function Contact() {
   return (
     <section
@@ -29,9 +31,9 @@ export default function Contact() {
 
       <footer className="mt-28 w-full max-w-7xl border-t border-sand/10 pt-8">
         <div className="flex flex-col items-center justify-between gap-4 text-sand/50 sm:flex-row">
-          <span className="font-display text-sm font-bold tracking-tight text-sand/70">
-            BANYAN<span className="text-ember"> PATH</span>
-          </span>
+          <a href="#top" className="text-[1.1rem]">
+            <Logo />
+          </a>
           <span className="font-body text-xs uppercase tracking-widest2">
             All we do is staffing · 2026
           </span>
