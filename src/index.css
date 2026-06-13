@@ -76,3 +76,31 @@ body {
   transform: translateY(40px);
   will-change: transform, opacity;
 }
+
+/* --- Cursor-reactive tilt cards --- */
+.tilt {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tilt-img {
+  transform: translate(var(--tx, 0), var(--ty, 0)) scale(1.12);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.tilt-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 158, 48, 0.35),
+    transparent 60%
+  );
+  opacity: var(--glow, 0);
+  transition: opacity 0.4s ease;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+.tilt-pop {
+  transform: translateZ(45px);
+}

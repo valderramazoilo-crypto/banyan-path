@@ -1,4 +1,5 @@
 import Picture from '../components/Picture'
+import TiltCard from '../components/TiltCard'
 
 const points = [
   'Filtro inicial y preselección',
@@ -11,15 +12,16 @@ export default function Companies() {
     <section className="relative px-6 py-24 md:px-10">
       <div className="mx-auto w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-sand/12">
         <div className="grid md:grid-cols-2">
-          <div className="relative min-h-[18rem]">
+          <TiltCard max={0} lift={22} className="relative min-h-[18rem] overflow-hidden">
             <Picture
               slug="recruitment"
               alt="Equipo de selección de Banyan Path"
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="tilt-img absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-forest-deep/40 to-forest-deep" />
-          </div>
+            <div className="tilt-glow" />
+          </TiltCard>
           <div className="bg-forest-deep/80 p-10 backdrop-blur-sm md:p-14">
             <p className="eyebrow reveal mb-5">Para hoteles y empresas</p>
             <h2 className="reveal font-display text-3xl font-extrabold leading-tight tracking-tightest text-sand md:text-4xl">

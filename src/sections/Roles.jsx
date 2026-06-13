@@ -1,4 +1,5 @@
 import Picture from '../components/Picture'
+import TiltCard from '../components/TiltCard'
 
 const roles = [
   {
@@ -49,7 +50,7 @@ export default function Roles() {
 
         <div className="grid auto-rows-min grid-cols-1 gap-5 md:grid-cols-3">
           {roles.map((r) => (
-            <article
+            <TiltCard
               key={r.slug}
               className={`reveal group relative overflow-hidden rounded-3xl border border-sand/10 ${r.span} ${r.h}`}
             >
@@ -57,11 +58,11 @@ export default function Roles() {
                 slug={r.slug}
                 alt={r.label}
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
+                className="tilt-img absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-forest-deep via-forest-deep/20 to-transparent" />
-              <div className="absolute inset-0 bg-banyan-gradient opacity-0 mix-blend-overlay transition-opacity duration-500 group-hover:opacity-30" />
-              <div className="absolute inset-x-0 bottom-0 p-7">
+              <div className="tilt-glow" />
+              <div className="absolute inset-x-0 bottom-0 p-7 tilt-pop">
                 <div className="mb-3 h-1 w-8 rounded-full bg-ember transition-all duration-300 group-hover:w-14" />
                 <h3 className="font-display text-2xl font-bold text-sand">
                   {r.label}
@@ -70,7 +71,7 @@ export default function Roles() {
                   {r.desc}
                 </p>
               </div>
-            </article>
+            </TiltCard>
           ))}
         </div>
       </div>

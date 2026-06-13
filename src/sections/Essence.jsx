@@ -1,4 +1,5 @@
 import Picture from '../components/Picture'
+import TiltCard from '../components/TiltCard'
 
 export default function Essence() {
   return (
@@ -7,15 +8,16 @@ export default function Essence() {
         <div className="grid gap-14 md:grid-cols-2 md:items-center">
           {/* image */}
           <div className="reveal relative order-2 md:order-1">
-            <div className="relative overflow-hidden rounded-[2rem] border border-sand/12 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]">
+            <TiltCard className="relative overflow-hidden rounded-[2rem] border border-sand/12 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)]">
               <Picture
                 slug="housekeeping"
                 alt="Housekeeping en un hotel de lujo"
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="aspect-[4/3] w-full object-cover"
+                className="tilt-img aspect-[4/3] w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-forest-deep/70 via-transparent to-ember/10" />
-            </div>
+              <div className="tilt-glow" />
+            </TiltCard>
             {/* floating stat chip */}
             <div className="absolute -bottom-6 -right-4 rounded-2xl border border-sand/15 bg-forest-deep/70 px-6 py-4 backdrop-blur-md sm:-right-6">
               <div className="font-display text-3xl font-extrabold text-ember">

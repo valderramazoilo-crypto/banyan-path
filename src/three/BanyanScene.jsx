@@ -3,19 +3,20 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { generateBanyan } from './generateBanyan'
-import { buildTreeGeometry } from './buildTree'
+import { buildLineGeometry } from './buildTree'
 import { banyan } from './progressStore'
 import './materials'
 
 const lerp = THREE.MathUtils.lerp
+const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 
 function BanyanTree() {
-  const tubeMat = useRef()
+  const lineMat = useRef()
   const nodeMat = useRef()
-  const group = useRef()
+  const { camera } = useThree()
 
   const data = useMemo(() => generateBanyan({ seed: 11 }), [])
-  const tubeGeo = useMemo(() => buildTreeGeometry(data.branches, 6), [data])
+  const lineGeo = useMemo(() => buildLineGeometry(data.branches), [data])
   const nodeGeo = useMemo(() => {
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(data.nodePositions, 3))
@@ -25,42 +26,58 @@ function BanyanTree() {
     return g
   }, [data])
 
+  // cursor → world-space raycast helpers
+  const raycaster = useMemo(() => new THREE.Raycaster(), [])
+  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), [])
+  const ndc = useMemo(() => new THREE.Vector2(), [])
+  const cursorWorld = useRef(new THREE.Vector3(999, 999, 999))
+  const hit = useRef(new THREE.Vector3())
+  const intro = useRef(0)
+
   useFrame((state, delta) => {
+    intro.current = Math.min(1, intro.current + delta / 1.6)
     banyan.scrollCurrent = lerp(
       banyan.scrollCurrent,
       banyan.scrollTarget,
       Math.min(1, delta * 4)
     )
     const s = banyan.scrollCurrent
-    const growth = Math.min(s / 0.62, 1) // fully grown by ~62% of the page
-    // melt the tree away over the last stretch so the closing reads clean
+    // tree auto-grows in on load, then scroll keeps growing it
+    const growth = Math.max(easeOut(intro.current) * 0.42, Math.min(s / 0.55, 1))
     const fade = 1 - THREE.MathUtils.smoothstep(s, 0.8, 0.96)
     const t = state.clock.elapsedTime
 
-    if (tubeMat.current) {
-      tubeMat.current.uProgress = growth
-      tubeMat.current.uTime = t
-      tubeMat.current.uFade = fade
+    // project the cursor onto the tree plane (z = 0)
+    ndc.set(banyan.pointerX, -banyan.pointerY)
+    raycaster.setFromCamera(ndc, camera)
+    if (raycaster.ray.intersectPlane(plane, hit.current)) {
+      cursorWorld.current.lerp(hit.current, 0.2)
+    }
+
+    if (lineMat.current) {
+      lineMat.current.uProgress = growth
+      lineMat.current.uTime = t
+      lineMat.current.uFade = fade
+      lineMat.current.uCursor.copy(cursorWorld.current)
     }
     if (nodeMat.current) {
       nodeMat.current.uProgress = growth
       nodeMat.current.uTime = t
       nodeMat.current.uFade = fade
-    }
-
-    if (group.current) {
-      const targetRotY = banyan.pointerX * 0.32 + t * 0.035
-      const targetRotX = -banyan.pointerY * 0.16
-      group.current.rotation.y = lerp(group.current.rotation.y, targetRotY, 0.05)
-      group.current.rotation.x = lerp(group.current.rotation.x, targetRotX, 0.05)
+      nodeMat.current.uCursor.copy(cursorWorld.current)
     }
   })
 
   return (
-    <group ref={group}>
-      <mesh geometry={tubeGeo}>
-        <banyanTubeMaterial ref={tubeMat} transparent depthWrite />
-      </mesh>
+    <group>
+      <lineSegments geometry={lineGeo}>
+        <banyanLineMaterial
+          ref={lineMat}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
       <points geometry={nodeGeo}>
         <banyanNodeMaterial
           ref={nodeMat}
@@ -75,32 +92,30 @@ function BanyanTree() {
 }
 
 // drifting atmospheric motes
-function Motes({ count = 120 }) {
+function Motes({ count = 90 }) {
   const ref = useRef()
   const positions = useMemo(() => {
     const a = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
       a[i * 3 + 0] = (Math.random() - 0.5) * 18
       a[i * 3 + 1] = Math.random() * 14 - 3
-      a[i * 3 + 2] = (Math.random() - 0.5) * 12 - 2
+      a[i * 3 + 2] = (Math.random() - 0.5) * 10 - 1
     }
     return a
   }, [count])
-
   useFrame((state) => {
-    if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 0.02
+    if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 0.018
   })
-
   return (
     <points ref={ref}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.045}
+        size={0.04}
         color="#EBE0C2"
         transparent
-        opacity={0.35}
+        opacity={0.28}
         depthWrite={false}
         sizeAttenuation
       />
@@ -111,18 +126,15 @@ function Motes({ count = 120 }) {
 function CameraRig() {
   const { camera } = useThree()
   const target = useRef(new THREE.Vector3(0, 0, 0))
-
   useFrame(() => {
     const s = banyan.scrollCurrent
-    const camX = Math.sin(s * Math.PI) * 2.4 + banyan.pointerX * 1.4
-    const camY = lerp(-1.6, 4.8, s) + banyan.pointerY * 0.7
-    const camZ = lerp(8.4, 13.5, s)
-
-    camera.position.x = lerp(camera.position.x, camX, 0.06)
-    camera.position.y = lerp(camera.position.y, camY, 0.06)
-    camera.position.z = lerp(camera.position.z, camZ, 0.06)
-
-    target.current.y = lerp(target.current.y, lerp(0.2, 4.4, s), 0.06)
+    const camX = Math.sin(s * Math.PI) * 1.8 + banyan.pointerX * 1.1
+    const camY = lerp(-1.2, 4.6, s) + banyan.pointerY * 0.5
+    const camZ = lerp(9.0, 13.5, s)
+    camera.position.x = lerp(camera.position.x, camX, 0.05)
+    camera.position.y = lerp(camera.position.y, camY, 0.05)
+    camera.position.z = lerp(camera.position.z, camZ, 0.05)
+    target.current.y = lerp(target.current.y, lerp(0.6, 4.4, s), 0.05)
     camera.lookAt(target.current)
   })
   return null
@@ -134,24 +146,21 @@ export default function BanyanScene() {
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
-        camera={{ position: [0, -1.6, 8.4], fov: 42, near: 0.1, far: 100 }}
+        camera={{ position: [0, -1.2, 9.0], fov: 42, near: 0.1, far: 100 }}
       >
-        <color attach="background" args={['#10160c']} />
-        <fog attach="fog" args={['#10160c', 11, 28]} />
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[4, 8, 5]} intensity={0.8} color="#fff4e0" />
-        <pointLight position={[-3, 2, 4]} intensity={20} color="#FF9E30" distance={18} />
+        <color attach="background" args={['#0e140a']} />
+        <fog attach="fog" args={['#0e140a', 12, 30]} />
         <BanyanTree />
         <Motes />
         <CameraRig />
         <EffectComposer>
           <Bloom
-            intensity={0.9}
-            luminanceThreshold={0.18}
+            intensity={1.0}
+            luminanceThreshold={0.12}
             luminanceSmoothing={0.9}
             mipmapBlur
           />
-          <Vignette eskil={false} offset={0.25} darkness={0.88} />
+          <Vignette eskil={false} offset={0.22} darkness={0.9} />
         </EffectComposer>
       </Canvas>
     </div>
