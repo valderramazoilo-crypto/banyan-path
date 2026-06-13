@@ -4,13 +4,13 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center md:px-10"
+      className="relative flex min-h-screen flex-col items-center justify-end overflow-hidden px-6 pb-[12vh] text-center md:px-10"
     >
       {/* reactive dome banner — lives in the hero, scrolls away with it */}
       <DomeScene />
 
       {/* soft radial just behind the text for legibility over the live tree */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[120vmin] w-[120vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(8,12,8,0.78)_0%,rgba(8,12,8,0.3)_45%,transparent_70%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-[66%] z-[1] h-[110vmin] w-[130vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(8,12,8,0.82)_0%,rgba(8,12,8,0.38)_42%,transparent_68%)]" />
 
       <div className="relative z-[2] mx-auto w-full max-w-4xl">
         <p className="eyebrow reveal mb-7">
@@ -51,15 +51,8 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
           </span>
-          Mueve el cursor — el domo reacciona
+          Mueve el cursor — la luz lo sigue
         </p>
-      </div>
-
-      <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2">
-        <div className="flex flex-col items-center gap-2 text-sand/45">
-          <span className="font-body text-xs uppercase tracking-widest2">Scroll</span>
-          <span className="h-10 w-px animate-pulse bg-gradient-to-b from-ember to-transparent" />
-        </div>
       </div>
     </section>
   )

@@ -7,6 +7,10 @@ export const banyan = {
   pointerX: 0, // -1..1
   pointerY: 0,
   intro: 0, // 0..1 grow-in progress of the hero tree
+  // world position of the cursor-driven light (set by the dome scene)
+  lightX: 0,
+  lightY: 1,
+  lightZ: 6,
   // branch focus (set on click; CameraRig flies toward it)
   focusActive: false,
   focusX: 0,
