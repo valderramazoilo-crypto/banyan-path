@@ -11,152 +11,164 @@ function mulberry32(seed) {
   }
 }
 
-/**
- * Procedurally grows a banyan-like tree as a set of poly-line BRANCHES that a
- * downstream builder turns into tapered 3D tubes. Every point along a branch
- * carries a `g` value (cumulative path length, later normalised to 0..1) that
- * says WHEN it appears as the scroll-driven `uProgress` sweeps 0 → 1, so the
- * whole tree literally grows out of the ground from trunk to aerial roots.
- */
-export function generateBanyan({
-  seed = 11,
-  trunkHeight = 5.4,
-  maxDepth = 6,
-  branchSplit = 2,
-} = {}) {
-  const rand = mulberry32(seed)
+const lerp = THREE.MathUtils.lerp
+const GOLDEN = Math.PI * (3 - Math.sqrt(5)) // 2.399… even 3D distribution
 
-  const branches = [] // { pts:Vec3[], g:number[], depth, r0, r1 }
-  const nodes = [] // { pos:Vec3, growth, size, kind }
+// orthonormal frame around a direction
+function frame(dir) {
+  const t = dir.clone().normalize()
+  const up = Math.abs(t.y) > 0.95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0)
+  const side = new THREE.Vector3().crossVectors(up, t).normalize()
+  const n = new THREE.Vector3().crossVectors(t, side).normalize()
+  return { side, n }
+}
+
+/**
+ * Grows a clean, ORGANISED banyan: structured symmetric branching rotated by
+ * the golden angle, smooth (non-jittery) curves. Returns:
+ *  - branches: poly-lines for the main silhouette (grow on scroll)
+ *  - filaments: latent twigs that stay hidden until the cursor passes nearby,
+ *    then sprout outward — the "expand into more lines" interaction.
+ *  - nodes: glowing junction points.
+ */
+export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = {}) {
+  const rand = mulberry32(seed)
+  const branches = []
+  const filaments = []
+  const nodes = []
   let maxPath = 0
 
-  const radiusFor = (d) =>
-    d >= 99 ? 0.03 : THREE.MathUtils.lerp(0.2, 0.018, Math.min(d / maxDepth, 1))
+  function spawnFilaments(base, dir, side, n, depth, gAt) {
+    const count = 2
+    const len = 0.5 * (1 - depth * 0.1)
+    for (let k = 0; k < count; k++) {
+      const ang = rand() * Math.PI * 2
+      const out = side
+        .clone()
+        .multiplyScalar(Math.cos(ang))
+        .add(n.clone().multiplyScalar(Math.sin(ang)))
+        .addScaledVector(dir, 0.35)
+        .normalize()
+      const p1 = base.clone().addScaledVector(out, len * 0.55)
+      const bend = side
+        .clone()
+        .multiplyScalar(Math.sin(ang * 1.7))
+        .add(n.clone().multiplyScalar(Math.cos(ang * 1.7)))
+        .multiplyScalar(len * 0.18)
+      const p2 = base.clone().addScaledVector(out, len).add(bend)
+      filaments.push({ base: base.clone(), pts: [base.clone(), p1, p2], growth: gAt })
+    }
+  }
 
-  function grow(origin, dir, length, depth, pathLen) {
-    const steps = Math.max(5, Math.round(length * 5))
+  function grow(origin, dir, length, depth, pathLen, roll) {
+    const steps = Math.max(6, Math.round(length * 5))
     const stepLen = length / steps
-    let prev = origin.clone()
-    let curDir = dir.clone().normalize()
-    let path = pathLen
+    let pos = origin.clone()
+    let d = dir.clone().normalize()
+    const { side, n } = frame(d)
 
-    const pts = [prev.clone()]
+    const swayAmp = 0.05 + depth * 0.012
+    const swayFreq = 1.1 + rand() * 0.5
+    const swayPhase = rand() * 6.28
+
+    let path = pathLen
+    const pts = [pos.clone()]
     const gs = [path]
 
     for (let i = 0; i < steps; i++) {
-      curDir.x += (rand() - 0.5) * 0.18
-      curDir.y += (rand() - 0.5) * 0.08 + (depth === 0 ? 0.05 : -0.015)
-      curDir.z += (rand() - 0.5) * 0.18
-      curDir.normalize()
-      const next = prev.clone().addScaledVector(curDir, stepLen)
+      const f = i / steps
+      // smooth, deterministic organic sway (no random walk)
+      const s = Math.sin(f * Math.PI * swayFreq * 2 + swayPhase) * swayAmp
+      const cc = Math.cos(f * Math.PI * swayFreq * 2 + swayPhase) * swayAmp * 0.5
+      d.addScaledVector(side, s).addScaledVector(n, cc)
+      d.y += depth === 0 ? 0.02 : 0.006 // gentle upward bias
+      d.normalize()
+      pos = pos.clone().addScaledVector(d, stepLen)
       path += stepLen
-      pts.push(next.clone())
+      pts.push(pos.clone())
       gs.push(path)
-      prev = next
+      if (depth >= 1 && i > 1 && i % 2 === 0) {
+        spawnFilaments(pos.clone(), d.clone(), side, n, depth, path)
+      }
     }
     maxPath = Math.max(maxPath, path)
-
-    branches.push({
-      pts,
-      g: gs,
-      depth,
-      r0: radiusFor(depth),
-      r1: radiusFor(depth + 1),
-    })
+    branches.push({ pts, g: gs, depth })
 
     nodes.push({
-      pos: prev.clone(),
+      pos: pos.clone(),
       growth: path,
-      size: THREE.MathUtils.lerp(0.55, 0.16, depth / maxDepth),
+      size: lerp(0.5, 0.14, depth / maxDepth),
       kind: depth >= maxDepth - 1 ? 'leaf' : 'joint',
     })
 
     if (depth >= maxDepth) {
-      for (let k = 0; k < 4; k++) {
+      for (let k = 0; k < 3; k++) {
         nodes.push({
-          pos: prev
+          pos: pos
             .clone()
             .add(
               new THREE.Vector3(
-                (rand() - 0.5) * 0.7,
-                (rand() - 0.5) * 0.7,
-                (rand() - 0.5) * 0.7
+                (rand() - 0.5) * 0.5,
+                (rand() - 0.5) * 0.5,
+                (rand() - 0.5) * 0.5
               )
             ),
-          growth: path + rand() * 0.4,
-          size: 0.1 + rand() * 0.09,
+          growth: path + rand() * 0.3,
+          size: 0.09 + rand() * 0.07,
           kind: 'leaf',
         })
       }
       return
     }
 
-    const children = branchSplit + (rand() < 0.5 ? 1 : 0)
-    for (let c = 0; c < children; c++) {
-      const spread = 0.55 + depth * 0.12
-      const childDir = curDir
+    // structured pair of children, tilted symmetrically, rolled by golden angle
+    const open = 0.52 + depth * 0.04
+    const ef = frame(d)
+    for (let c = 0; c < 2; c++) {
+      const ang = roll + c * Math.PI + (rand() - 0.5) * 0.15
+      const axis = ef.side
         .clone()
-        .add(
-          new THREE.Vector3(
-            (rand() - 0.5) * spread,
-            (rand() - 0.2) * spread * 0.8,
-            (rand() - 0.5) * spread
-          )
-        )
+        .multiplyScalar(Math.cos(ang))
+        .add(ef.n.clone().multiplyScalar(Math.sin(ang)))
         .normalize()
-      const childLen = length * (0.62 + rand() * 0.18)
-      grow(prev.clone(), childDir, childLen, depth + 1, path)
-
-      // banyan aerial roots: drop from upper branches toward the ground
-      if (depth >= 2 && depth <= 4 && rand() < 0.55) {
-        dropRoot(prev.clone(), path)
-      }
+      const childDir = d.clone().applyAxisAngle(axis, open)
+      childDir.y += 0.06
+      childDir.normalize()
+      grow(pos.clone(), childDir, length * (0.72 - depth * 0.03), depth + 1, path, roll + GOLDEN)
     }
+
+    if (depth >= 2 && depth <= 3 && rand() < 0.4) dropRoot(pos.clone(), path)
   }
 
   function dropRoot(origin, pathLen) {
-    const targetY = -0.2 - rand() * 0.4
+    const targetY = -0.3 - rand() * 0.3
     const drop = origin.y - targetY
-    if (drop < 0.5) return
+    if (drop < 0.6) return
     const steps = Math.max(5, Math.round(drop * 5))
     const stepLen = drop / steps
-    let prev = origin.clone()
-    let path = pathLen + 0.6
-    const sway = new THREE.Vector3((rand() - 0.5) * 0.05, 0, (rand() - 0.5) * 0.05)
-
-    const pts = [prev.clone()]
+    let pos = origin.clone()
+    let path = pathLen + 0.5
+    const pts = [pos.clone()]
     const gs = [path]
+    const phase = rand() * 6.28
     for (let i = 0; i < steps; i++) {
-      sway.x += (rand() - 0.5) * 0.045
-      sway.z += (rand() - 0.5) * 0.045
-      const next = prev.clone().add(new THREE.Vector3(sway.x, -stepLen, sway.z))
+      const f = i / steps
+      const sway = Math.sin(f * Math.PI * 2 + phase) * 0.04
+      pos = pos.clone().add(new THREE.Vector3(sway, -stepLen, sway * 0.6))
       path += stepLen
-      pts.push(next.clone())
+      pts.push(pos.clone())
       gs.push(path)
-      prev = next
     }
     maxPath = Math.max(maxPath, path)
-    branches.push({ pts, g: gs, depth: 99, r0: 0.032, r1: 0.02 })
-    nodes.push({ pos: prev.clone(), growth: path, size: 0.12, kind: 'root' })
+    branches.push({ pts, g: gs, depth: 99 })
+    nodes.push({ pos: pos.clone(), growth: path, size: 0.1, kind: 'root' })
   }
 
-  // launch: 3 splaying trunks (banyan multi-trunk)
+  // tidy multi-trunk base
   const base = new THREE.Vector3(0, -2.4, 0)
-  grow(base, new THREE.Vector3(0, 1, 0), trunkHeight, 0, 0)
-  grow(
-    base.clone().add(new THREE.Vector3(0.45, 0, 0.22)),
-    new THREE.Vector3(0.2, 1, 0.06).normalize(),
-    trunkHeight * 0.9,
-    0,
-    0.2
-  )
-  grow(
-    base.clone().add(new THREE.Vector3(-0.4, 0, -0.28)),
-    new THREE.Vector3(-0.18, 1, -0.09).normalize(),
-    trunkHeight * 0.85,
-    0,
-    0.25
-  )
+  grow(base, new THREE.Vector3(0, 1, 0), trunkHeight, 0, 0, 0)
+  grow(base.clone().add(new THREE.Vector3(0.4, 0, 0.2)), new THREE.Vector3(0.16, 1, 0.05).normalize(), trunkHeight * 0.9, 0, 0.2, GOLDEN)
+  grow(base.clone().add(new THREE.Vector3(-0.36, 0, -0.24)), new THREE.Vector3(-0.14, 1, -0.07).normalize(), trunkHeight * 0.86, 0, 0.25, GOLDEN * 2)
 
   // normalise growth into [0,1]
   const inv = 1 / maxPath
@@ -164,22 +176,24 @@ export function generateBanyan({
     b.g = b.g.map((v) => v * inv)
     b.depthN = b.depth >= 99 ? 1 : Math.min(b.depth / maxDepth, 1)
   })
+  filaments.forEach((f) => (f.growthN = f.growth * inv))
 
   const nodePositions = new Float32Array(nodes.length * 3)
   const nodeGrowth = new Float32Array(nodes.length)
   const nodeSize = new Float32Array(nodes.length)
-  const nodeKind = new Float32Array(nodes.length) // 0 joint, 1 leaf, 2 root
-  nodes.forEach((n, i) => {
-    nodePositions[i * 3 + 0] = n.pos.x
-    nodePositions[i * 3 + 1] = n.pos.y
-    nodePositions[i * 3 + 2] = n.pos.z
-    nodeGrowth[i] = n.growth * inv
-    nodeSize[i] = n.size
-    nodeKind[i] = n.kind === 'leaf' ? 1 : n.kind === 'root' ? 2 : 0
+  const nodeKind = new Float32Array(nodes.length)
+  nodes.forEach((nd, i) => {
+    nodePositions[i * 3 + 0] = nd.pos.x
+    nodePositions[i * 3 + 1] = nd.pos.y
+    nodePositions[i * 3 + 2] = nd.pos.z
+    nodeGrowth[i] = nd.growth * inv
+    nodeSize[i] = nd.size
+    nodeKind[i] = nd.kind === 'leaf' ? 1 : nd.kind === 'root' ? 2 : 0
   })
 
   return {
     branches,
+    filaments,
     nodePositions,
     nodeGrowth,
     nodeSize,

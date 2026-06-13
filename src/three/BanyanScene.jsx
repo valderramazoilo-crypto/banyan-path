@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { generateBanyan } from './generateBanyan'
-import { buildLineGeometry } from './buildTree'
+import { buildLineGeometry, buildFilamentGeometry } from './buildTree'
 import { banyan } from './progressStore'
 import './materials'
 
@@ -12,11 +12,13 @@ const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 
 function BanyanTree() {
   const lineMat = useRef()
+  const filMat = useRef()
   const nodeMat = useRef()
   const { camera } = useThree()
 
   const data = useMemo(() => generateBanyan({ seed: 11 }), [])
   const lineGeo = useMemo(() => buildLineGeometry(data.branches), [data])
+  const filGeo = useMemo(() => buildFilamentGeometry(data.filaments), [data])
   const nodeGeo = useMemo(() => {
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(data.nodePositions, 3))
@@ -60,6 +62,12 @@ function BanyanTree() {
       lineMat.current.uFade = fade
       lineMat.current.uCursor.copy(cursorWorld.current)
     }
+    if (filMat.current) {
+      filMat.current.uProgress = growth
+      filMat.current.uTime = t
+      filMat.current.uFade = fade
+      filMat.current.uCursor.copy(cursorWorld.current)
+    }
     if (nodeMat.current) {
       nodeMat.current.uProgress = growth
       nodeMat.current.uTime = t
@@ -73,6 +81,14 @@ function BanyanTree() {
       <lineSegments geometry={lineGeo}>
         <banyanLineMaterial
           ref={lineMat}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </lineSegments>
+      <lineSegments geometry={filGeo}>
+        <banyanFilamentMaterial
+          ref={filMat}
           transparent
           depthWrite={false}
           blending={THREE.AdditiveBlending}
