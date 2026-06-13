@@ -22,6 +22,14 @@ export function buildLineGeometry(branches) {
   return geo
 }
 
+// Connection network → LineSegments (precomputed positions + growth).
+export function buildConnectionGeometry(positions, growth) {
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geo.setAttribute('aGrowth', new THREE.BufferAttribute(growth, 1))
+  return geo
+}
+
 // Latent twigs → LineSegments. Each vertex stores its filament's `aBase` so the
 // shader can sprout it OUT from the base only when the cursor is near.
 export function buildFilamentGeometry(filaments) {

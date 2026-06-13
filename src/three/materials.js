@@ -100,6 +100,51 @@ const BanyanFilamentMaterial = shaderMaterial(
   `
 )
 
+// --- Connection network -------------------------------------------------
+// Faint cross-links between branch tips — the brand's "living web". A slow
+// pulse travels along them; they brighten near the cursor.
+const BanyanConnectionMaterial = shaderMaterial(
+  {
+    uProgress: 0,
+    uTime: 0,
+    uFade: 1,
+    uCursor: new THREE.Vector3(999, 999, 999),
+    uCursorR: 3.0,
+    uSand: new THREE.Color('#EBE0C2'),
+    uEmber: new THREE.Color('#FF9E30'),
+  },
+  /* glsl vertex */ `
+    attribute float aGrowth;
+    uniform float uProgress;
+    uniform vec3 uCursor;
+    uniform float uCursorR;
+    varying float vGrowth;
+    varying float vNear;
+    void main() {
+      vGrowth = aGrowth;
+      vec4 world = modelMatrix * vec4(position, 1.0);
+      vNear = smoothstep(uCursorR, 0.0, distance(world.xyz, uCursor)) * step(aGrowth, uProgress);
+      gl_Position = projectionMatrix * viewMatrix * world;
+    }
+  `,
+  /* glsl fragment */ `
+    uniform float uProgress;
+    uniform float uTime;
+    uniform float uFade;
+    uniform vec3 uSand;
+    uniform vec3 uEmber;
+    varying float vGrowth;
+    varying float vNear;
+    void main() {
+      if (vGrowth > uProgress) discard;
+      float pulse = 0.5 + 0.5 * sin(uTime * 1.6 + vGrowth * 18.0);
+      vec3 col = mix(uSand, uEmber, vNear);
+      float alpha = (0.05 + 0.06 * pulse + vNear * 0.5) * uFade;
+      gl_FragColor = vec4(col, alpha);
+    }
+  `
+)
+
 // --- Reactive glowing nodes ---------------------------------------------
 const BanyanNodeMaterial = shaderMaterial(
   {
@@ -159,4 +204,9 @@ const BanyanNodeMaterial = shaderMaterial(
   `
 )
 
-extend({ BanyanLineMaterial, BanyanFilamentMaterial, BanyanNodeMaterial })
+extend({
+  BanyanLineMaterial,
+  BanyanFilamentMaterial,
+  BanyanConnectionMaterial,
+  BanyanNodeMaterial,
+})

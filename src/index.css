@@ -22,17 +22,28 @@ body {
   overflow-x: hidden;
 }
 
-/* The fixed 3D canvas lives behind all the scrolling content */
+/* The fixed 3D canvas lives behind all the scrolling content. It receives
+   pointer events so branches are clickable; the content layer is transparent
+   to clicks except for genuinely interactive elements (re-enabled below). */
 .banyan-canvas {
   position: fixed;
   inset: 0;
   z-index: 0;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .content-layer {
   position: relative;
   z-index: 1;
+  pointer-events: none;
+}
+.content-layer a,
+.content-layer button,
+.content-layer input,
+.content-layer textarea,
+.content-layer select,
+.content-layer .tilt {
+  pointer-events: auto;
 }
 
 /* Custom scrollbar — forest/ember */

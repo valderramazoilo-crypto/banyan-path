@@ -14,7 +14,6 @@ function mulberry32(seed) {
 const lerp = THREE.MathUtils.lerp
 const GOLDEN = Math.PI * (3 - Math.sqrt(5)) // 2.399… even 3D distribution
 
-// orthonormal frame around a direction
 function frame(dir) {
   const t = dir.clone().normalize()
   const up = Math.abs(t.y) > 0.95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0)
@@ -24,24 +23,22 @@ function frame(dir) {
 }
 
 /**
- * Grows a clean, ORGANISED banyan: structured symmetric branching rotated by
- * the golden angle, smooth (non-jittery) curves. Returns:
- *  - branches: poly-lines for the main silhouette (grow on scroll)
- *  - filaments: latent twigs that stay hidden until the cursor passes nearby,
- *    then sprout outward — the "expand into more lines" interaction.
- *  - nodes: glowing junction points.
+ * Clean, ORGANISED banyan. Returns main branches, latent cursor filaments,
+ * glowing nodes, a cross-link "connection network" between branch tips (the
+ * brand's living web), plus a per-node → branch map so clicks can select and
+ * focus a branch.
  */
 export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = {}) {
   const rand = mulberry32(seed)
-  const branches = []
+  const branches = [] // { pts, g, depth, depthN }
   const filaments = []
-  const nodes = []
+  const nodes = [] // { pos, growth, size, kind, branch }
+  const tips = [] // one per branch: { pos, growth, branch }
   let maxPath = 0
 
   function spawnFilaments(base, dir, side, n, depth, gAt) {
-    const count = 2
     const len = 0.5 * (1 - depth * 0.1)
-    for (let k = 0; k < count; k++) {
+    for (let k = 0; k < 2; k++) {
       const ang = rand() * Math.PI * 2
       const out = side
         .clone()
@@ -77,11 +74,10 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
 
     for (let i = 0; i < steps; i++) {
       const f = i / steps
-      // smooth, deterministic organic sway (no random walk)
       const s = Math.sin(f * Math.PI * swayFreq * 2 + swayPhase) * swayAmp
       const cc = Math.cos(f * Math.PI * swayFreq * 2 + swayPhase) * swayAmp * 0.5
       d.addScaledVector(side, s).addScaledVector(n, cc)
-      d.y += depth === 0 ? 0.02 : 0.006 // gentle upward bias
+      d.y += depth === 0 ? 0.02 : 0.006
       d.normalize()
       pos = pos.clone().addScaledVector(d, stepLen)
       path += stepLen
@@ -92,36 +88,34 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
       }
     }
     maxPath = Math.max(maxPath, path)
+
+    const bi = branches.length
     branches.push({ pts, g: gs, depth })
 
     nodes.push({
       pos: pos.clone(),
       growth: path,
-      size: lerp(0.5, 0.14, depth / maxDepth),
+      size: lerp(0.5, 0.16, depth / maxDepth),
       kind: depth >= maxDepth - 1 ? 'leaf' : 'joint',
+      branch: bi,
     })
+    tips.push({ pos: pos.clone(), growth: path, branch: bi })
 
     if (depth >= maxDepth) {
       for (let k = 0; k < 3; k++) {
         nodes.push({
           pos: pos
             .clone()
-            .add(
-              new THREE.Vector3(
-                (rand() - 0.5) * 0.5,
-                (rand() - 0.5) * 0.5,
-                (rand() - 0.5) * 0.5
-              )
-            ),
+            .add(new THREE.Vector3((rand() - 0.5) * 0.5, (rand() - 0.5) * 0.5, (rand() - 0.5) * 0.5)),
           growth: path + rand() * 0.3,
           size: 0.09 + rand() * 0.07,
           kind: 'leaf',
+          branch: bi,
         })
       }
       return
     }
 
-    // structured pair of children, tilted symmetrically, rolled by golden angle
     const open = 0.52 + depth * 0.04
     const ef = frame(d)
     for (let c = 0; c < 2; c++) {
@@ -160,17 +154,44 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
       gs.push(path)
     }
     maxPath = Math.max(maxPath, path)
+    const bi = branches.length
     branches.push({ pts, g: gs, depth: 99 })
-    nodes.push({ pos: pos.clone(), growth: path, size: 0.1, kind: 'root' })
+    nodes.push({ pos: pos.clone(), growth: path, size: 0.1, kind: 'root', branch: bi })
   }
 
-  // tidy multi-trunk base
   const base = new THREE.Vector3(0, -2.4, 0)
   grow(base, new THREE.Vector3(0, 1, 0), trunkHeight, 0, 0, 0)
   grow(base.clone().add(new THREE.Vector3(0.4, 0, 0.2)), new THREE.Vector3(0.16, 1, 0.05).normalize(), trunkHeight * 0.9, 0, 0.2, GOLDEN)
   grow(base.clone().add(new THREE.Vector3(-0.36, 0, -0.24)), new THREE.Vector3(-0.14, 1, -0.07).normalize(), trunkHeight * 0.86, 0, 0.25, GOLDEN * 2)
 
-  // normalise growth into [0,1]
+  // --- connection network between nearby branch tips (the living web) ----
+  const connections = []
+  const linked = new Set()
+  for (let a = 0; a < tips.length; a++) {
+    let bestJ = -1
+    let bestD = Infinity
+    for (let b = 0; b < tips.length; b++) {
+      if (b === a || tips[b].branch === tips[a].branch) continue
+      const dist = tips[a].pos.distanceTo(tips[b].pos)
+      if (dist > 0.5 && dist < 1.5 && dist < bestD) {
+        bestD = dist
+        bestJ = b
+      }
+    }
+    if (bestJ >= 0) {
+      const key = a < bestJ ? `${a}_${bestJ}` : `${bestJ}_${a}`
+      if (!linked.has(key)) {
+        linked.add(key)
+        connections.push({
+          a: tips[a].pos,
+          b: tips[bestJ].pos,
+          growth: Math.max(tips[a].growth, tips[bestJ].growth),
+        })
+      }
+    }
+  }
+
+  // --- normalise + pack ---------------------------------------------------
   const inv = 1 / maxPath
   branches.forEach((b) => {
     b.g = b.g.map((v) => v * inv)
@@ -182,6 +203,7 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
   const nodeGrowth = new Float32Array(nodes.length)
   const nodeSize = new Float32Array(nodes.length)
   const nodeKind = new Float32Array(nodes.length)
+  const nodeBranch = new Int32Array(nodes.length)
   nodes.forEach((nd, i) => {
     nodePositions[i * 3 + 0] = nd.pos.x
     nodePositions[i * 3 + 1] = nd.pos.y
@@ -189,6 +211,21 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
     nodeGrowth[i] = nd.growth * inv
     nodeSize[i] = nd.size
     nodeKind[i] = nd.kind === 'leaf' ? 1 : nd.kind === 'root' ? 2 : 0
+    nodeBranch[i] = nd.branch
+  })
+
+  const connPositions = new Float32Array(connections.length * 2 * 3)
+  const connGrowth = new Float32Array(connections.length * 2)
+  connections.forEach((c, i) => {
+    const o = i * 6
+    connPositions[o + 0] = c.a.x
+    connPositions[o + 1] = c.a.y
+    connPositions[o + 2] = c.a.z
+    connPositions[o + 3] = c.b.x
+    connPositions[o + 4] = c.b.y
+    connPositions[o + 5] = c.b.z
+    connGrowth[i * 2 + 0] = c.growth * inv
+    connGrowth[i * 2 + 1] = c.growth * inv
   })
 
   return {
@@ -198,6 +235,10 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
     nodeGrowth,
     nodeSize,
     nodeKind,
+    nodeBranch,
     nodeCount: nodes.length,
+    connPositions,
+    connGrowth,
+    connCount: connections.length,
   }
 }

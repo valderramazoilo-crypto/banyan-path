@@ -46,7 +46,7 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
           </span>
-          Mueve el cursor sobre las ramas
+          Mueve el cursor sobre las ramas · haz clic en un punto para acercarte
         </p>
       </div>
 
