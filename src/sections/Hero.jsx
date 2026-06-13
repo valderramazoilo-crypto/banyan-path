@@ -1,4 +1,4 @@
-import BanyanScene from '../three/BanyanScene'
+import DomeScene from '../three/DomeScene'
 
 export default function Hero() {
   return (
@@ -6,8 +6,8 @@ export default function Hero() {
       id="top"
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center md:px-10"
     >
-      {/* the banyan tree banner — lives in the hero, scrolls away with it */}
-      <BanyanScene />
+      {/* reactive dome banner — lives in the hero, scrolls away with it */}
+      <DomeScene />
 
       {/* soft radial just behind the text for legibility over the live tree */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[120vmin] w-[120vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(8,12,8,0.78)_0%,rgba(8,12,8,0.3)_45%,transparent_70%)]" />
@@ -51,7 +51,7 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
           </span>
-          Mueve el cursor sobre la red
+          Mueve el cursor — el domo reacciona
         </p>
       </div>
 
