@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
@@ -14,7 +14,7 @@ import './materials'
 const lerp = THREE.MathUtils.lerp
 const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 
-function BanyanTree({ data, onSelect }) {
+function BanyanTree({ data }) {
   const lineMat = useRef()
   const filMat = useRef()
   const connMat = useRef()
@@ -44,11 +44,11 @@ function BanyanTree({ data, onSelect }) {
   const intro = useRef(0)
 
   useFrame((state, delta) => {
-    intro.current = Math.min(1, intro.current + delta / 1.6)
+    intro.current = Math.min(1, intro.current + delta / 1.8)
     banyan.scrollCurrent = lerp(banyan.scrollCurrent, banyan.scrollTarget, Math.min(1, delta * 4))
     const s = banyan.scrollCurrent
-    const growth = Math.max(easeOut(intro.current) * 0.42, Math.min(s / 0.55, 1))
-    const fade = 1 - THREE.MathUtils.smoothstep(s, 0.8, 0.96)
+    const growth = Math.max(easeOut(intro.current) * 0.6, Math.min(s / 0.5, 1))
+    const fade = 1 - THREE.MathUtils.smoothstep(s, 0.82, 0.97)
     const t = state.clock.elapsedTime
 
     ndc.set(banyan.pointerX, -banyan.pointerY)
@@ -67,24 +67,18 @@ function BanyanTree({ data, onSelect }) {
     }
   })
 
-  const handleClick = (e) => {
-    e.stopPropagation()
-    if (e.index == null) return
-    onSelect(data.nodeBranch[e.index])
-  }
-
   return (
     <group>
-      <lineSegments geometry={lineGeo}>
-        <banyanLineMaterial ref={lineMat} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
-      </lineSegments>
       <lineSegments geometry={connGeo}>
         <banyanConnectionMaterial ref={connMat} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+      </lineSegments>
+      <lineSegments geometry={lineGeo}>
+        <banyanLineMaterial ref={lineMat} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
       </lineSegments>
       <lineSegments geometry={filGeo}>
         <banyanFilamentMaterial ref={filMat} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
       </lineSegments>
-      <points geometry={nodeGeo} onClick={handleClick}>
+      <points geometry={nodeGeo}>
         <banyanNodeMaterial
           ref={nodeMat}
           transparent
@@ -97,154 +91,125 @@ function BanyanTree({ data, onSelect }) {
   )
 }
 
-// thick glowing highlight tube for the selected branch
-function Highlight({ branch }) {
-  const ref = useRef()
-  const grow = useRef(0)
+// concentric ring floor with faint spokes + dotted rings
+function Floor({ y = -2.6 }) {
+  const mat = useRef()
+  const dotMat = useRef()
+  const radii = [0.9, 1.7, 2.6, 3.6, 4.7, 5.9]
 
-  const geo = useMemo(() => {
-    if (!branch) return null
-    const curve = new THREE.CatmullRomCurve3(branch.pts)
-    return new THREE.TubeGeometry(curve, Math.max(8, branch.pts.length * 2), 0.06, 8, false)
-  }, [branch])
-
-  useFrame((_, delta) => {
-    const target = branch ? 1 : 0
-    grow.current = lerp(grow.current, target, Math.min(1, delta * 6))
-    if (ref.current) {
-      const sc = 0.6 + grow.current * 0.4
-      ref.current.scale.setScalar(sc)
-      ref.current.material.opacity = grow.current
+  const lineGeo = useMemo(() => {
+    const pos = []
+    const SEG = 100
+    for (const r of radii) {
+      for (let i = 0; i < SEG; i++) {
+        const a0 = (i / SEG) * Math.PI * 2
+        const a1 = ((i + 1) / SEG) * Math.PI * 2
+        pos.push(Math.cos(a0) * r, y, Math.sin(a0) * r, Math.cos(a1) * r, y, Math.sin(a1) * r)
+      }
     }
+    for (let k = 0; k < 24; k++) {
+      const a = (k / 24) * Math.PI * 2
+      pos.push(Math.cos(a) * 0.9, y, Math.sin(a) * 0.9, Math.cos(a) * 5.9, y, Math.sin(a) * 5.9)
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    return g
+  }, [y])
+
+  const dotGeo = useMemo(() => {
+    const pos = []
+    const SEG = 60
+    for (const r of radii) {
+      for (let i = 0; i < SEG; i++) {
+        const a = (i / SEG) * Math.PI * 2
+        pos.push(Math.cos(a) * r, y, Math.sin(a) * r)
+      }
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+    return g
+  }, [y])
+
+  useFrame(() => {
+    const fade = 1 - THREE.MathUtils.smoothstep(banyan.scrollCurrent, 0.82, 0.97)
+    const intro = THREE.MathUtils.clamp(banyan.scrollCurrent * 4 + 0.3, 0, 1)
+    if (mat.current) mat.current.opacity = 0.13 * fade * intro
+    if (dotMat.current) dotMat.current.opacity = 0.4 * fade * intro
   })
 
-  if (!geo) return null
   return (
-    <mesh ref={ref} geometry={geo}>
-      <meshBasicMaterial
-        color="#FF9E30"
-        transparent
-        opacity={0}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
+    <group>
+      <lineSegments geometry={lineGeo}>
+        <lineBasicMaterial ref={mat} color="#5f8a35" transparent opacity={0.13} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </lineSegments>
+      <points geometry={dotGeo}>
+        <pointsMaterial ref={dotMat} color="#9fc15a" size={0.03} transparent opacity={0.4} depthWrite={false} sizeAttenuation />
+      </points>
+    </group>
   )
 }
 
-function Motes({ count = 90 }) {
+function Motes({ count = 70 }) {
   const ref = useRef()
   const positions = useMemo(() => {
     const a = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
-      a[i * 3 + 0] = (Math.random() - 0.5) * 18
-      a[i * 3 + 1] = Math.random() * 14 - 3
+      a[i * 3 + 0] = (Math.random() - 0.5) * 16
+      a[i * 3 + 1] = Math.random() * 8 - 2
       a[i * 3 + 2] = (Math.random() - 0.5) * 10 - 1
     }
     return a
   }, [count])
   useFrame((state) => {
-    if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 0.018
+    if (ref.current) ref.current.rotation.y = state.clock.elapsedTime * 0.015
   })
   return (
     <points ref={ref}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.04} color="#EBE0C2" transparent opacity={0.28} depthWrite={false} sizeAttenuation />
+      <pointsMaterial size={0.03} color="#cfe0a8" transparent opacity={0.25} depthWrite={false} sizeAttenuation />
     </points>
   )
 }
 
 function CameraRig() {
   const { camera } = useThree()
-  const target = useRef(new THREE.Vector3(0, 0, 0))
-  const focus = useRef(new THREE.Vector3())
-
+  const target = useRef(new THREE.Vector3(0, -0.4, 0))
   useFrame(() => {
-    if (banyan.focusActive) {
-      // fly toward the selected branch
-      focus.current.set(banyan.focusX, banyan.focusY, banyan.focusZ)
-      const desired = focus.current
-        .clone()
-        .add(new THREE.Vector3(focus.current.x * 0.25, 0.6, 4.0))
-      camera.position.lerp(desired, 0.08)
-      target.current.lerp(focus.current, 0.1)
-      camera.lookAt(target.current)
-      return
-    }
     const s = banyan.scrollCurrent
-    const camX = Math.sin(s * Math.PI) * 1.8 + banyan.pointerX * 1.1
-    const camY = lerp(-1.2, 4.6, s) + banyan.pointerY * 0.5
-    const camZ = lerp(9.0, 13.5, s)
+    const camX = banyan.pointerX * 1.0
+    const camY = lerp(1.0, 3.2, s) + banyan.pointerY * 0.5
+    const camZ = lerp(11.0, 14.5, s)
     camera.position.x = lerp(camera.position.x, camX, 0.05)
     camera.position.y = lerp(camera.position.y, camY, 0.05)
     camera.position.z = lerp(camera.position.z, camZ, 0.05)
-    target.current.y = lerp(target.current.y, lerp(0.6, 4.4, s), 0.05)
-    target.current.x = lerp(target.current.x, 0, 0.05)
-    target.current.z = lerp(target.current.z, 0, 0.05)
+    target.current.y = lerp(target.current.y, lerp(-0.4, 1.2, s), 0.05)
     camera.lookAt(target.current)
   })
   return null
 }
 
 export default function BanyanScene() {
-  const data = useMemo(() => generateBanyan({ seed: 11 }), [])
-  const [selected, setSelected] = useState(null)
-
-  const onSelect = (bi) => {
-    const branch = data.branches[bi]
-    if (!branch) return
-    const tip = branch.pts[branch.pts.length - 1]
-    const mid = branch.pts[Math.floor(branch.pts.length * 0.6)]
-    banyan.focusX = mid.x
-    banyan.focusY = mid.y
-    banyan.focusZ = mid.z
-    banyan.focusActive = true
-    setSelected(bi)
-  }
-
-  const onClear = () => {
-    banyan.focusActive = false
-    setSelected(null)
-  }
-
+  const data = useMemo(() => generateBanyan({ seed: 7 }), [])
   return (
-    <>
-      <div className="banyan-canvas">
-        <Canvas
-          dpr={[1, 2]}
-          gl={{ antialias: true, alpha: true }}
-          camera={{ position: [0, -1.2, 9.0], fov: 42, near: 0.1, far: 100 }}
-          raycaster={{ params: { Points: { threshold: 0.45 } } }}
-          onPointerMissed={onClear}
-        >
-          <color attach="background" args={['#0e140a']} />
-          <fog attach="fog" args={['#0e140a', 12, 30]} />
-          <BanyanTree data={data} onSelect={onSelect} />
-          <Highlight branch={selected != null ? data.branches[selected] : null} />
-          <Motes />
-          <CameraRig />
-          <EffectComposer>
-            <Bloom intensity={1.0} luminanceThreshold={0.12} luminanceSmoothing={0.9} mipmapBlur />
-            <Vignette eskil={false} offset={0.22} darkness={0.9} />
-          </EffectComposer>
-        </Canvas>
-      </div>
-
-      {selected != null && (
-        <div className="pointer-events-none fixed inset-0 z-40">
-          <button
-            onClick={onClear}
-            className="pointer-events-auto absolute bottom-8 right-8 inline-flex items-center gap-2 rounded-full border border-sand/20 bg-forest-deep/80 px-5 py-2.5 font-body text-sm text-sand backdrop-blur-md transition-colors hover:border-ember hover:text-ember"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            Cerrar vista
-          </button>
-        </div>
-      )}
-    </>
+    <div className="banyan-canvas">
+      <Canvas
+        dpr={[1, 2]}
+        gl={{ antialias: true, alpha: true }}
+        camera={{ position: [0, 1.0, 11.0], fov: 42, near: 0.1, far: 100 }}
+      >
+        <color attach="background" args={['#05070a']} />
+        <fog attach="fog" args={['#05070a', 13, 32]} />
+        <BanyanTree data={data} />
+        <Floor y={data.floorY} />
+        <Motes />
+        <CameraRig />
+        <EffectComposer>
+          <Bloom intensity={1.1} luminanceThreshold={0.1} luminanceSmoothing={0.9} mipmapBlur />
+          <Vignette eskil={false} offset={0.2} darkness={0.92} />
+        </EffectComposer>
+      </Canvas>
+    </div>
   )
 }

@@ -2,20 +2,22 @@ import * as THREE from 'three'
 import { shaderMaterial } from '@react-three/drei'
 import { extend } from '@react-three/fiber'
 
-// --- Main branch lines --------------------------------------------------
-// Clean glowing lines. Appear as uProgress passes aGrowth (scroll growth).
-// A subtle ember warmth where the cursor passes; uFade melts the tree at the
-// end of the page. No displacement — the "expansion" is the filaments below.
+// Shared palette — green strands, white-green glow (matches the reference).
+const MOSS = '#7fa83e'
+const SAND = '#eaf3d6'
+const EMBER = '#FF9E30'
+
+// --- Main strands -------------------------------------------------------
 const BanyanLineMaterial = shaderMaterial(
   {
     uProgress: 0,
     uTime: 0,
     uFade: 1,
     uCursor: new THREE.Vector3(999, 999, 999),
-    uCursorR: 2.8,
-    uMoss: new THREE.Color('#9aa84f'),
-    uSand: new THREE.Color('#EBE0C2'),
-    uEmber: new THREE.Color('#FF9E30'),
+    uCursorR: 2.6,
+    uMoss: new THREE.Color(MOSS),
+    uSand: new THREE.Color(SAND),
+    uEmber: new THREE.Color(EMBER),
   },
   /* glsl vertex */ `
     attribute float aGrowth;
@@ -40,25 +42,22 @@ const BanyanLineMaterial = shaderMaterial(
     uniform float uFade;
     uniform vec3 uMoss;
     uniform vec3 uSand;
-    uniform vec3 uEmber;
     varying float vGrowth;
     varying float vDepth;
     varying float vNear;
     void main() {
       if (vGrowth > uProgress) discard;
-      vec3 base = mix(uMoss, uSand, vDepth * 0.55);
+      vec3 base = mix(uMoss, uSand, vDepth * 0.4);
       float tip = smoothstep(uProgress - 0.05, uProgress, vGrowth);
-      vec3 col = mix(base, uEmber, max(tip, vNear * 0.6));
+      vec3 col = mix(base, uSand, max(tip, vNear));
       col += uSand * 0.04 * sin(uTime * 1.3 + vGrowth * 30.0);
-      float alpha = (0.24 + vDepth * 0.28 + tip * 0.55 + vNear * 0.35) * uFade;
+      float alpha = (0.3 + vDepth * 0.25 + tip * 0.5 + vNear * 0.6) * uFade;
       gl_FragColor = vec4(col, alpha);
     }
   `
 )
 
 // --- Latent filaments (cursor sprouts more lines) -----------------------
-// Hidden until the cursor nears the filament's base, then it extends out from
-// that base and glows ember — the tree "expands into more lines".
 const BanyanFilamentMaterial = shaderMaterial(
   {
     uProgress: 0,
@@ -66,8 +65,8 @@ const BanyanFilamentMaterial = shaderMaterial(
     uFade: 1,
     uCursor: new THREE.Vector3(999, 999, 999),
     uCursorR: 3.0,
-    uEmber: new THREE.Color('#FF9E30'),
-    uSand: new THREE.Color('#EBE0C2'),
+    uSand: new THREE.Color(SAND),
+    uMoss: new THREE.Color(MOSS),
   },
   /* glsl vertex */ `
     attribute vec3 aBase;
@@ -82,27 +81,22 @@ const BanyanFilamentMaterial = shaderMaterial(
       float near = smoothstep(uCursorR, 0.0, distance(baseW, uCursor)) * grown;
       vNear = near;
       vec3 fullW = (modelMatrix * vec4(position, 1.0)).xyz;
-      // sprout: interpolate from the base out to the full twig by proximity
-      vec3 pos = mix(baseW, fullW, near);
-      gl_Position = projectionMatrix * viewMatrix * vec4(pos, 1.0);
+      gl_Position = projectionMatrix * viewMatrix * vec4(mix(baseW, fullW, near), 1.0);
     }
   `,
   /* glsl fragment */ `
     uniform float uFade;
-    uniform vec3 uEmber;
     uniform vec3 uSand;
+    uniform vec3 uMoss;
     varying float vNear;
     void main() {
       if (vNear <= 0.02) discard;
-      vec3 col = mix(uSand, uEmber, 0.75);
-      gl_FragColor = vec4(col, vNear * 0.85 * uFade);
+      gl_FragColor = vec4(mix(uMoss, uSand, 0.7), vNear * 0.85 * uFade);
     }
   `
 )
 
-// --- Connection network -------------------------------------------------
-// Faint cross-links between branch tips — the brand's "living web". A slow
-// pulse travels along them; they brighten near the cursor.
+// --- Connection web -----------------------------------------------------
 const BanyanConnectionMaterial = shaderMaterial(
   {
     uProgress: 0,
@@ -110,8 +104,8 @@ const BanyanConnectionMaterial = shaderMaterial(
     uFade: 1,
     uCursor: new THREE.Vector3(999, 999, 999),
     uCursorR: 3.0,
-    uSand: new THREE.Color('#EBE0C2'),
-    uEmber: new THREE.Color('#FF9E30'),
+    uSand: new THREE.Color(SAND),
+    uMoss: new THREE.Color(MOSS),
   },
   /* glsl vertex */ `
     attribute float aGrowth;
@@ -132,20 +126,20 @@ const BanyanConnectionMaterial = shaderMaterial(
     uniform float uTime;
     uniform float uFade;
     uniform vec3 uSand;
-    uniform vec3 uEmber;
+    uniform vec3 uMoss;
     varying float vGrowth;
     varying float vNear;
     void main() {
       if (vGrowth > uProgress) discard;
       float pulse = 0.5 + 0.5 * sin(uTime * 1.6 + vGrowth * 18.0);
-      vec3 col = mix(uSand, uEmber, vNear);
-      float alpha = (0.05 + 0.06 * pulse + vNear * 0.5) * uFade;
+      vec3 col = mix(uMoss, uSand, vNear);
+      float alpha = (0.06 + 0.07 * pulse + vNear * 0.5) * uFade;
       gl_FragColor = vec4(col, alpha);
     }
   `
 )
 
-// --- Reactive glowing nodes ---------------------------------------------
+// --- Glowing nodes / dots -----------------------------------------------
 const BanyanNodeMaterial = shaderMaterial(
   {
     uProgress: 0,
@@ -153,10 +147,9 @@ const BanyanNodeMaterial = shaderMaterial(
     uFade: 1,
     uPixelRatio: 1,
     uCursor: new THREE.Vector3(999, 999, 999),
-    uCursorR: 2.8,
-    uMoss: new THREE.Color('#9aa84f'),
-    uEmber: new THREE.Color('#FF9E30'),
-    uSand: new THREE.Color('#EBE0C2'),
+    uCursorR: 2.6,
+    uMoss: new THREE.Color(MOSS),
+    uSand: new THREE.Color(SAND),
   },
   /* glsl vertex */ `
     attribute float aGrowth;
@@ -175,16 +168,15 @@ const BanyanNodeMaterial = shaderMaterial(
       vAppear = smoothstep(aGrowth, aGrowth + 0.04, uProgress);
       vec4 world = modelMatrix * vec4(position, 1.0);
       vNear = smoothstep(uCursorR, 0.0, distance(world.xyz, uCursor)) * vAppear;
-      float pulse = 1.0 + 0.2 * sin(uTime * 2.0 + aGrowth * 30.0);
+      float pulse = 1.0 + 0.18 * sin(uTime * 2.0 + aGrowth * 30.0);
       vec4 mv = viewMatrix * world;
       gl_Position = projectionMatrix * mv;
-      gl_PointSize = aSize * 80.0 * vAppear * (pulse + vNear * 1.2) * uPixelRatio / -mv.z;
+      gl_PointSize = aSize * 90.0 * vAppear * (pulse + vNear * 1.2) * uPixelRatio / -mv.z;
     }
   `,
   /* glsl fragment */ `
     uniform float uFade;
     uniform vec3 uMoss;
-    uniform vec3 uEmber;
     uniform vec3 uSand;
     varying float vAppear;
     varying float vKind;
@@ -195,10 +187,9 @@ const BanyanNodeMaterial = shaderMaterial(
       float dd = length(uv);
       if (dd > 0.5) discard;
       float glow = smoothstep(0.5, 0.0, dd);
-      vec3 col = uMoss;
-      col = mix(col, uEmber, step(0.5, vKind) * step(vKind, 1.5));
-      col = mix(col, uSand, step(1.5, vKind));
-      col = mix(col, uEmber, vNear);
+      // tips bright white-green, dots mossy; flare to white near cursor
+      vec3 col = mix(uMoss, uSand, step(0.5, vKind));
+      col = mix(col, uSand, vNear);
       gl_FragColor = vec4(col, glow * vAppear * uFade);
     }
   `

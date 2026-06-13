@@ -46,7 +46,7 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
           </span>
-          Mueve el cursor — el orbe te sigue
+          Mueve el cursor sobre la red
         </p>
       </div>
 

@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 
-// Deterministic PRNG so the tree is identical on every reload
 function mulberry32(seed) {
   return function () {
     seed |= 0
@@ -12,183 +11,176 @@ function mulberry32(seed) {
 }
 
 const lerp = THREE.MathUtils.lerp
-const GOLDEN = Math.PI * (3 - Math.sqrt(5)) // 2.399… even 3D distribution
-
-function frame(dir) {
-  const t = dir.clone().normalize()
-  const up = Math.abs(t.y) > 0.95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0)
-  const side = new THREE.Vector3().crossVectors(up, t).normalize()
-  const n = new THREE.Vector3().crossVectors(t, side).normalize()
-  return { side, n }
-}
 
 /**
- * Clean, ORGANISED banyan. Returns main branches, latent cursor filaments,
- * glowing nodes, a cross-link "connection network" between branch tips (the
- * brand's living web), plus a per-node → branch map so clicks can select and
- * focus a branch.
+ * "Network tree": a clean, symmetric banyan made of glowing strands with dots
+ * along them, a triangulated canopy web up top and roots that fan out radially
+ * across the floor. Returns line strands, node points (junctions + dots),
+ * canopy/ground connection web, cursor filaments and a per-node branch map.
  */
-export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = {}) {
+export function generateBanyan({ seed = 7, maxDepth = 5, floorY = -2.6 } = {}) {
   const rand = mulberry32(seed)
-  const branches = [] // { pts, g, depth, depthN }
+  const branches = []
+  const nodes = [] // { pos, growth, size, kind }  kind: tip|dot|root
+  const structural = [] // bright junction/tip nodes used for the web
   const filaments = []
-  const nodes = [] // { pos, growth, size, kind, branch }
-  const tips = [] // one per branch: { pos, growth, branch }
   let maxPath = 0
 
-  function spawnFilaments(base, dir, side, n, depth, gAt) {
-    const len = 0.5 * (1 - depth * 0.1)
+  function addDots(pts, gs, depth) {
+    for (let i = 1; i < pts.length - 1; i++) {
+      if (i % 2 !== 0) continue
+      nodes.push({
+        pos: pts[i].clone(),
+        growth: gs[i],
+        size: lerp(0.07, 0.045, depth / maxDepth),
+        kind: 'dot',
+      })
+    }
+  }
+
+  function spawnFilaments(base, dir, depth, gAt) {
+    const len = 0.45 * (1 - depth * 0.1)
+    const up = Math.abs(dir.y) > 0.95 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0)
+    const side = new THREE.Vector3().crossVectors(up, dir).normalize()
+    const n = new THREE.Vector3().crossVectors(dir, side).normalize()
     for (let k = 0; k < 2; k++) {
       const ang = rand() * Math.PI * 2
       const out = side
         .clone()
         .multiplyScalar(Math.cos(ang))
         .add(n.clone().multiplyScalar(Math.sin(ang)))
-        .addScaledVector(dir, 0.35)
+        .addScaledVector(dir, 0.3)
         .normalize()
       const p1 = base.clone().addScaledVector(out, len * 0.55)
-      const bend = side
-        .clone()
-        .multiplyScalar(Math.sin(ang * 1.7))
-        .add(n.clone().multiplyScalar(Math.cos(ang * 1.7)))
-        .multiplyScalar(len * 0.18)
-      const p2 = base.clone().addScaledVector(out, len).add(bend)
+      const p2 = base.clone().addScaledVector(out, len)
       filaments.push({ base: base.clone(), pts: [base.clone(), p1, p2], growth: gAt })
     }
   }
 
-  function grow(origin, dir, length, depth, pathLen, roll) {
-    const steps = Math.max(6, Math.round(length * 5))
+  // --- canopy: symmetric planar fan with a gentle outward arc -------------
+  function growCanopy(pos, ang, angZ, length, depth, pathLen) {
+    const steps = Math.max(5, Math.round(length * 5))
     const stepLen = length / steps
-    let pos = origin.clone()
-    let d = dir.clone().normalize()
-    const { side, n } = frame(d)
-
-    const swayAmp = 0.05 + depth * 0.012
-    const swayFreq = 1.1 + rand() * 0.5
-    const swayPhase = rand() * 6.28
-
+    const curve = depth === 0 ? 0 : 0.5 * Math.sign(ang || (rand() - 0.5))
+    let p = pos.clone()
+    let a = ang
     let path = pathLen
-    const pts = [pos.clone()]
+    const pts = [p.clone()]
     const gs = [path]
 
     for (let i = 0; i < steps; i++) {
-      const f = i / steps
-      const s = Math.sin(f * Math.PI * swayFreq * 2 + swayPhase) * swayAmp
-      const cc = Math.cos(f * Math.PI * swayFreq * 2 + swayPhase) * swayAmp * 0.5
-      d.addScaledVector(side, s).addScaledVector(n, cc)
-      d.y += depth === 0 ? 0.02 : 0.006
-      d.normalize()
-      pos = pos.clone().addScaledVector(d, stepLen)
+      a += (curve / steps) * (0.4 + depth * 0.12) // arc outward more as it climbs
+      const dir = new THREE.Vector3(
+        Math.sin(a) * Math.cos(angZ),
+        Math.cos(a),
+        Math.sin(angZ)
+      ).normalize()
+      p = p.clone().addScaledVector(dir, stepLen)
       path += stepLen
-      pts.push(pos.clone())
+      pts.push(p.clone())
       gs.push(path)
-      if (depth >= 1 && i > 1 && i % 2 === 0) {
-        spawnFilaments(pos.clone(), d.clone(), side, n, depth, path)
-      }
     }
     maxPath = Math.max(maxPath, path)
-
     const bi = branches.length
     branches.push({ pts, g: gs, depth })
+    addDots(pts, gs, depth)
 
-    nodes.push({
-      pos: pos.clone(),
+    const endDir = pts[pts.length - 1].clone().sub(pts[pts.length - 2]).normalize()
+    if (depth >= 2) spawnFilaments(pts[Math.floor(pts.length / 2)].clone(), endDir, depth, gs[Math.floor(pts.length / 2)])
+
+    const tip = {
+      pos: p.clone(),
       growth: path,
-      size: lerp(0.5, 0.16, depth / maxDepth),
-      kind: depth >= maxDepth - 1 ? 'leaf' : 'joint',
+      size: lerp(0.16, 0.09, depth / maxDepth),
+      kind: depth >= maxDepth ? 'tip' : 'tip',
       branch: bi,
-    })
-    tips.push({ pos: pos.clone(), growth: path, branch: bi })
-
-    if (depth >= maxDepth) {
-      for (let k = 0; k < 3; k++) {
-        nodes.push({
-          pos: pos
-            .clone()
-            .add(new THREE.Vector3((rand() - 0.5) * 0.5, (rand() - 0.5) * 0.5, (rand() - 0.5) * 0.5)),
-          growth: path + rand() * 0.3,
-          size: 0.09 + rand() * 0.07,
-          kind: 'leaf',
-          branch: bi,
-        })
-      }
-      return
+      canopy: true,
     }
+    nodes.push(tip)
+    structural.push(tip)
 
-    const open = 0.52 + depth * 0.04
-    const ef = frame(d)
-    for (let c = 0; c < 2; c++) {
-      const ang = roll + c * Math.PI + (rand() - 0.5) * 0.15
-      const axis = ef.side
-        .clone()
-        .multiplyScalar(Math.cos(ang))
-        .add(ef.n.clone().multiplyScalar(Math.sin(ang)))
-        .normalize()
-      const childDir = d.clone().applyAxisAngle(axis, open)
-      childDir.y += 0.06
-      childDir.normalize()
-      grow(pos.clone(), childDir, length * (0.72 - depth * 0.03), depth + 1, path, roll + GOLDEN)
-    }
+    if (depth >= maxDepth) return
 
-    if (depth >= 2 && depth <= 3 && rand() < 0.4) dropRoot(pos.clone(), path)
+    const spread = depth <= 1 ? 0.16 : 0.3 - depth * 0.015
+    const dz = 0.12
+    growCanopy(p.clone(), a - spread + (rand() - 0.5) * 0.06, angZ + (rand() - 0.5) * dz, length * 0.74, depth + 1, path)
+    growCanopy(p.clone(), a + spread + (rand() - 0.5) * 0.06, angZ - (rand() - 0.5) * dz, length * 0.74, depth + 1, path)
   }
 
-  function dropRoot(origin, pathLen) {
-    const targetY = -0.3 - rand() * 0.3
-    const drop = origin.y - targetY
-    if (drop < 0.6) return
-    const steps = Math.max(5, Math.round(drop * 5))
-    const stepLen = drop / steps
-    let pos = origin.clone()
-    let path = pathLen + 0.5
-    const pts = [pos.clone()]
+  // --- roots: radial fan flattening onto the floor ------------------------
+  function growRoot(az) {
+    const start = new THREE.Vector3(0, -0.6, 0)
+    const steps = 16
+    const totalLen = 3.6 + rand() * 1.6
+    const stepLen = totalLen / steps
+    let p = start.clone()
+    let path = 0.2
+    const pts = [p.clone()]
     const gs = [path]
-    const phase = rand() * 6.28
     for (let i = 0; i < steps; i++) {
       const f = i / steps
-      const sway = Math.sin(f * Math.PI * 2 + phase) * 0.04
-      pos = pos.clone().add(new THREE.Vector3(sway, -stepLen, sway * 0.6))
+      const down = Math.cos(f * Math.PI * 0.5)
+      const out = Math.sin(f * Math.PI * 0.5)
+      const dir = new THREE.Vector3(Math.cos(az) * out, -down * 0.7 - 0.04, Math.sin(az) * out).normalize()
+      p = p.clone().addScaledVector(dir, stepLen)
+      if (p.y < floorY) p.y = floorY + 0.02 * Math.sin(f * 8)
       path += stepLen
-      pts.push(pos.clone())
+      pts.push(p.clone())
       gs.push(path)
     }
     maxPath = Math.max(maxPath, path)
     const bi = branches.length
     branches.push({ pts, g: gs, depth: 99 })
-    nodes.push({ pos: pos.clone(), growth: path, size: 0.1, kind: 'root', branch: bi })
+    addDots(pts, gs, 4)
+    const tip = { pos: p.clone(), growth: path, size: 0.08, kind: 'root', branch: bi, canopy: false }
+    nodes.push(tip)
+    structural.push(tip)
   }
 
-  const base = new THREE.Vector3(0, -2.4, 0)
-  grow(base, new THREE.Vector3(0, 1, 0), trunkHeight, 0, 0, 0)
-  grow(base.clone().add(new THREE.Vector3(0.4, 0, 0.2)), new THREE.Vector3(0.16, 1, 0.05).normalize(), trunkHeight * 0.9, 0, 0.2, GOLDEN)
-  grow(base.clone().add(new THREE.Vector3(-0.36, 0, -0.24)), new THREE.Vector3(-0.14, 1, -0.07).normalize(), trunkHeight * 0.86, 0, 0.25, GOLDEN * 2)
+  // bundled trunk → fuller, symmetric canopy
+  const base = new THREE.Vector3(0, -0.6, 0)
+  const trunkH = 2.0
+  for (const off of [-0.07, 0, 0.07]) {
+    growCanopy(base.clone().add(new THREE.Vector3(off, 0, off * 0.5)), off * 0.6, off * 2, trunkH, 0, 0.1)
+  }
+  const ROOTS = 16
+  for (let k = 0; k < ROOTS; k++) growRoot((k / ROOTS) * Math.PI * 2 + rand() * 0.1)
 
-  // --- connection network between nearby branch tips (the living web) ----
+  // --- connection web -----------------------------------------------------
   const connections = []
   const linked = new Set()
-  for (let a = 0; a < tips.length; a++) {
-    let bestJ = -1
-    let bestD = Infinity
-    for (let b = 0; b < tips.length; b++) {
-      if (b === a || tips[b].branch === tips[a].branch) continue
-      const dist = tips[a].pos.distanceTo(tips[b].pos)
-      if (dist > 0.5 && dist < 1.5 && dist < bestD) {
-        bestD = dist
-        bestJ = b
+  const addLink = (a, b) => {
+    const key = a.idx < b.idx ? `${a.idx}_${b.idx}` : `${b.idx}_${a.idx}`
+    if (linked.has(key)) return
+    linked.add(key)
+    connections.push({ a: a.pos, b: b.pos, growth: Math.max(a.growth, b.growth) })
+  }
+  structural.forEach((s, i) => (s.idx = i))
+  const canopyNodes = structural.filter((s) => s.canopy && s.pos.y > 0.2)
+  const rootNodes = structural.filter((s) => !s.canopy)
+  // triangulated dome: each canopy node → 3 nearest neighbours
+  for (const a of canopyNodes) {
+    const near = canopyNodes
+      .filter((b) => b !== a)
+      .map((b) => ({ b, d: a.pos.distanceTo(b.pos) }))
+      .filter((x) => x.d > 0.15 && x.d < 1.2)
+      .sort((x, y) => x.d - y.d)
+      .slice(0, 3)
+    near.forEach((x) => addLink(a, x.b))
+  }
+  // ground web: each root tip → nearest root tip
+  for (const a of rootNodes) {
+    let best = null
+    let bd = Infinity
+    for (const b of rootNodes) {
+      if (b === a) continue
+      const d = a.pos.distanceTo(b.pos)
+      if (d > 0.3 && d < 1.6 && d < bd) {
+        bd = d
+        best = b
       }
     }
-    if (bestJ >= 0) {
-      const key = a < bestJ ? `${a}_${bestJ}` : `${bestJ}_${a}`
-      if (!linked.has(key)) {
-        linked.add(key)
-        connections.push({
-          a: tips[a].pos,
-          b: tips[bestJ].pos,
-          growth: Math.max(tips[a].growth, tips[bestJ].growth),
-        })
-      }
-    }
+    if (best) addLink(a, best)
   }
 
   // --- normalise + pack ---------------------------------------------------
@@ -210,8 +202,8 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
     nodePositions[i * 3 + 2] = nd.pos.z
     nodeGrowth[i] = nd.growth * inv
     nodeSize[i] = nd.size
-    nodeKind[i] = nd.kind === 'leaf' ? 1 : nd.kind === 'root' ? 2 : 0
-    nodeBranch[i] = nd.branch
+    nodeKind[i] = nd.kind === 'tip' ? 1 : nd.kind === 'root' ? 2 : 0
+    nodeBranch[i] = nd.branch ?? 0
   })
 
   const connPositions = new Float32Array(connections.length * 2 * 3)
@@ -240,5 +232,6 @@ export function generateBanyan({ seed = 11, trunkHeight = 5.4, maxDepth = 5 } = 
     connPositions,
     connGrowth,
     connCount: connections.length,
+    floorY,
   }
 }
