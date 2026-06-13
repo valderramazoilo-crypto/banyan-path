@@ -6,6 +6,8 @@ import { useScrollAndPointer } from './hooks/useScrollAndPointer'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
 import Essence from './sections/Essence'
+import Roles from './sections/Roles'
+import Companies from './sections/Companies'
 import Stats from './sections/Stats'
 import Services from './sections/Services'
 import Process from './sections/Process'
@@ -70,8 +72,10 @@ export default function App() {
         <main>
           <Hero />
           <Essence />
+          <Roles />
           <Stats />
           <Services />
+          <Companies />
           <Process />
           <Contact />
         </main>

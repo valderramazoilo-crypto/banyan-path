@@ -12,86 +12,88 @@ function mulberry32(seed) {
 }
 
 /**
- * Procedurally grows a banyan-like tree.
- *
- * Returns flat typed-array buffers ready for a single LineSegments draw call,
- * plus node positions (branch junctions / tips) for the glowing connection
- * points. Every vertex carries an `aGrowth` value in [0,1] describing WHEN it
- * appears as the scroll-driven `uProgress` sweeps from 0 → 1, so the whole
- * tree literally grows out of the ground from trunk to aerial roots.
+ * Procedurally grows a banyan-like tree as a set of poly-line BRANCHES that a
+ * downstream builder turns into tapered 3D tubes. Every point along a branch
+ * carries a `g` value (cumulative path length, later normalised to 0..1) that
+ * says WHEN it appears as the scroll-driven `uProgress` sweeps 0 → 1, so the
+ * whole tree literally grows out of the ground from trunk to aerial roots.
  */
 export function generateBanyan({
-  seed = 7,
-  trunkHeight = 5.2,
+  seed = 11,
+  trunkHeight = 5.4,
   maxDepth = 6,
   branchSplit = 2,
 } = {}) {
   const rand = mulberry32(seed)
 
-  const segments = [] // { a:Vec3, b:Vec3, g0, g1 }
+  const branches = [] // { pts:Vec3[], g:number[], depth, r0, r1 }
   const nodes = [] // { pos:Vec3, growth, size, kind }
-
   let maxPath = 0
 
-  // --- main recursive branch growth -------------------------------------
-  function grow(origin, dir, length, radius, depth, pathLen) {
-    const steps = Math.max(3, Math.round(length * 4))
-    const stepLen = length / steps
+  const radiusFor = (d) =>
+    d >= 99 ? 0.03 : THREE.MathUtils.lerp(0.2, 0.018, Math.min(d / maxDepth, 1))
 
+  function grow(origin, dir, length, depth, pathLen) {
+    const steps = Math.max(5, Math.round(length * 5))
+    const stepLen = length / steps
     let prev = origin.clone()
     let curDir = dir.clone().normalize()
     let path = pathLen
 
+    const pts = [prev.clone()]
+    const gs = [path]
+
     for (let i = 0; i < steps; i++) {
-      // gentle curving + upward bias so branches arc naturally
       curDir.x += (rand() - 0.5) * 0.18
-      curDir.y += (rand() - 0.5) * 0.08 + (depth === 0 ? 0.04 : -0.01)
+      curDir.y += (rand() - 0.5) * 0.08 + (depth === 0 ? 0.05 : -0.015)
       curDir.z += (rand() - 0.5) * 0.18
       curDir.normalize()
-
       const next = prev.clone().addScaledVector(curDir, stepLen)
-      const g0 = path
-      const g1 = path + stepLen
-      segments.push({ a: prev.clone(), b: next.clone(), g0, g1, depth })
-
+      path += stepLen
+      pts.push(next.clone())
+      gs.push(path)
       prev = next
-      path = g1
     }
     maxPath = Math.max(maxPath, path)
 
-    // a glowing node at the tip of this branch
+    branches.push({
+      pts,
+      g: gs,
+      depth,
+      r0: radiusFor(depth),
+      r1: radiusFor(depth + 1),
+    })
+
     nodes.push({
       pos: prev.clone(),
       growth: path,
-      size: THREE.MathUtils.lerp(0.5, 0.16, depth / maxDepth),
+      size: THREE.MathUtils.lerp(0.55, 0.16, depth / maxDepth),
       kind: depth >= maxDepth - 1 ? 'leaf' : 'joint',
     })
 
     if (depth >= maxDepth) {
-      // canopy crown: a small burst of leaf nodes
-      for (let k = 0; k < 3; k++) {
+      for (let k = 0; k < 4; k++) {
         nodes.push({
           pos: prev
             .clone()
             .add(
               new THREE.Vector3(
-                (rand() - 0.5) * 0.6,
-                (rand() - 0.5) * 0.6,
-                (rand() - 0.5) * 0.6
+                (rand() - 0.5) * 0.7,
+                (rand() - 0.5) * 0.7,
+                (rand() - 0.5) * 0.7
               )
             ),
           growth: path + rand() * 0.4,
-          size: 0.1 + rand() * 0.08,
+          size: 0.1 + rand() * 0.09,
           kind: 'leaf',
         })
       }
       return
     }
 
-    // spawn children
     const children = branchSplit + (rand() < 0.5 ? 1 : 0)
     for (let c = 0; c < children; c++) {
-      const spread = 0.5 + depth * 0.12
+      const spread = 0.55 + depth * 0.12
       const childDir = curDir
         .clone()
         .add(
@@ -103,85 +105,64 @@ export function generateBanyan({
         )
         .normalize()
       const childLen = length * (0.62 + rand() * 0.18)
-      grow(prev.clone(), childDir, childLen, radius * 0.7, depth + 1, path)
+      grow(prev.clone(), childDir, childLen, depth + 1, path)
 
-      // --- banyan aerial roots: drop from upper branches straight down ---
+      // banyan aerial roots: drop from upper branches toward the ground
       if (depth >= 2 && depth <= 4 && rand() < 0.55) {
         dropRoot(prev.clone(), path)
       }
     }
   }
 
-  // --- aerial roots reaching for the ground -----------------------------
   function dropRoot(origin, pathLen) {
     const targetY = -0.2 - rand() * 0.4
     const drop = origin.y - targetY
-    const steps = Math.max(4, Math.round(drop * 4))
+    if (drop < 0.5) return
+    const steps = Math.max(5, Math.round(drop * 5))
     const stepLen = drop / steps
     let prev = origin.clone()
-    let path = pathLen + 0.6 // roots appear a little later than their branch
-    let sway = new THREE.Vector3((rand() - 0.5) * 0.05, 0, (rand() - 0.5) * 0.05)
+    let path = pathLen + 0.6
+    const sway = new THREE.Vector3((rand() - 0.5) * 0.05, 0, (rand() - 0.5) * 0.05)
 
+    const pts = [prev.clone()]
+    const gs = [path]
     for (let i = 0; i < steps; i++) {
-      sway.x += (rand() - 0.5) * 0.04
-      sway.z += (rand() - 0.5) * 0.04
-      const next = prev
-        .clone()
-        .add(new THREE.Vector3(sway.x, -stepLen, sway.z))
-      const g0 = path
-      const g1 = path + stepLen
-      segments.push({ a: prev.clone(), b: next.clone(), g0, g1, depth: 99 })
+      sway.x += (rand() - 0.5) * 0.045
+      sway.z += (rand() - 0.5) * 0.045
+      const next = prev.clone().add(new THREE.Vector3(sway.x, -stepLen, sway.z))
+      path += stepLen
+      pts.push(next.clone())
+      gs.push(path)
       prev = next
-      path = g1
     }
     maxPath = Math.max(maxPath, path)
-    nodes.push({
-      pos: prev.clone(),
-      growth: path,
-      size: 0.12,
-      kind: 'root',
-    })
+    branches.push({ pts, g: gs, depth: 99, r0: 0.032, r1: 0.02 })
+    nodes.push({ pos: prev.clone(), growth: path, size: 0.12, kind: 'root' })
   }
 
-  // --- launch growth: 3 main trunks splaying out (banyan multi-trunk) ---
-  const base = new THREE.Vector3(0, -2.2, 0)
-  grow(base, new THREE.Vector3(0, 1, 0), trunkHeight, 0.5, 0, 0)
+  // launch: 3 splaying trunks (banyan multi-trunk)
+  const base = new THREE.Vector3(0, -2.4, 0)
+  grow(base, new THREE.Vector3(0, 1, 0), trunkHeight, 0, 0)
   grow(
-    base.clone().add(new THREE.Vector3(0.4, 0, 0.2)),
-    new THREE.Vector3(0.18, 1, 0.05).normalize(),
+    base.clone().add(new THREE.Vector3(0.45, 0, 0.22)),
+    new THREE.Vector3(0.2, 1, 0.06).normalize(),
     trunkHeight * 0.9,
-    0.42,
     0,
     0.2
   )
   grow(
-    base.clone().add(new THREE.Vector3(-0.35, 0, -0.25)),
-    new THREE.Vector3(-0.16, 1, -0.08).normalize(),
+    base.clone().add(new THREE.Vector3(-0.4, 0, -0.28)),
+    new THREE.Vector3(-0.18, 1, -0.09).normalize(),
     trunkHeight * 0.85,
-    0.4,
     0,
     0.25
   )
 
-  // --- normalise growth values into [0,1] -------------------------------
+  // normalise growth into [0,1]
   const inv = 1 / maxPath
-  const positions = new Float32Array(segments.length * 2 * 3)
-  const growth = new Float32Array(segments.length * 2)
-  const depthAttr = new Float32Array(segments.length * 2)
-
-  segments.forEach((s, i) => {
-    const o = i * 6
-    positions[o + 0] = s.a.x
-    positions[o + 1] = s.a.y
-    positions[o + 2] = s.a.z
-    positions[o + 3] = s.b.x
-    positions[o + 4] = s.b.y
-    positions[o + 5] = s.b.z
-    growth[i * 2 + 0] = s.g0 * inv
-    growth[i * 2 + 1] = s.g1 * inv
-    const d = s.depth === 99 ? 1 : Math.min(s.depth / maxDepth, 1)
-    depthAttr[i * 2 + 0] = d
-    depthAttr[i * 2 + 1] = d
+  branches.forEach((b) => {
+    b.g = b.g.map((v) => v * inv)
+    b.depthN = b.depth >= 99 ? 1 : Math.min(b.depth / maxDepth, 1)
   })
 
   const nodePositions = new Float32Array(nodes.length * 3)
@@ -198,10 +179,7 @@ export function generateBanyan({
   })
 
   return {
-    positions,
-    growth,
-    depth: depthAttr,
-    segmentCount: segments.length,
+    branches,
     nodePositions,
     nodeGrowth,
     nodeSize,

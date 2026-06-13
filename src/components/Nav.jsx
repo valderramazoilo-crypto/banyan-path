@@ -21,6 +21,7 @@ export default function Nav() {
         <nav className="hidden items-center gap-8 md:flex">
           {[
             ['Esencia', '#esencia'],
+            ['Talento', '#talento'],
             ['Servicios', '#servicios'],
             ['Proceso', '#proceso'],
           ].map(([label, href]) => (
