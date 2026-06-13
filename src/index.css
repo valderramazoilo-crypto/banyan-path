@@ -14,7 +14,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background-color: #141d0f;
+  background-color: #080c08;
   color: #EBE0C2;
   font-family: 'Exo 2', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -22,9 +22,10 @@ body {
   overflow-x: hidden;
 }
 
-/* The fixed 3D canvas lives behind all the scrolling content */
-.banyan-canvas {
-  position: fixed;
+/* The 3D tree is the hero banner — it fills the hero section and scrolls away
+   with it, leaving the sections below free for their own reactive elements. */
+.hero-canvas {
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;

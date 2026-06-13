@@ -23,10 +23,7 @@ function BanyanTree({ data }) {
 
   const lineGeo = useMemo(() => buildLineGeometry(data.branches), [data])
   const filGeo = useMemo(() => buildFilamentGeometry(data.filaments), [data])
-  const connGeo = useMemo(
-    () => buildConnectionGeometry(data.connPositions, data.connGrowth),
-    [data]
-  )
+  const connGeo = useMemo(() => buildConnectionGeometry(data.connPositions, data.connGrowth), [data])
   const nodeGeo = useMemo(() => {
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(data.nodePositions, 3))
@@ -44,11 +41,9 @@ function BanyanTree({ data }) {
   const intro = useRef(0)
 
   useFrame((state, delta) => {
-    intro.current = Math.min(1, intro.current + delta / 1.8)
-    banyan.scrollCurrent = lerp(banyan.scrollCurrent, banyan.scrollTarget, Math.min(1, delta * 4))
-    const s = banyan.scrollCurrent
-    const growth = Math.max(easeOut(intro.current) * 0.6, Math.min(s / 0.5, 1))
-    const fade = 1 - THREE.MathUtils.smoothstep(s, 0.82, 0.97)
+    intro.current = Math.min(1, intro.current + delta / 2.4)
+    banyan.intro = intro.current
+    const growth = easeOut(intro.current) // grows fully in on load (banner)
     const t = state.clock.elapsedTime
 
     ndc.set(banyan.pointerX, -banyan.pointerY)
@@ -61,7 +56,7 @@ function BanyanTree({ data }) {
       if (m.current) {
         m.current.uProgress = growth
         m.current.uTime = t
-        m.current.uFade = fade
+        m.current.uFade = 1
         m.current.uCursor.copy(cursorWorld.current)
       }
     }
@@ -91,7 +86,6 @@ function BanyanTree({ data }) {
   )
 }
 
-// concentric ring floor with faint spokes + dotted rings
 function Floor({ y = -2.6 }) {
   const mat = useRef()
   const dotMat = useRef()
@@ -118,7 +112,7 @@ function Floor({ y = -2.6 }) {
 
   const dotGeo = useMemo(() => {
     const pos = []
-    const SEG = 60
+    const SEG = 64
     for (const r of radii) {
       for (let i = 0; i < SEG; i++) {
         const a = (i / SEG) * Math.PI * 2
@@ -131,19 +125,18 @@ function Floor({ y = -2.6 }) {
   }, [y])
 
   useFrame(() => {
-    const fade = 1 - THREE.MathUtils.smoothstep(banyan.scrollCurrent, 0.82, 0.97)
-    const intro = THREE.MathUtils.clamp(banyan.scrollCurrent * 4 + 0.3, 0, 1)
-    if (mat.current) mat.current.opacity = 0.13 * fade * intro
-    if (dotMat.current) dotMat.current.opacity = 0.4 * fade * intro
+    const i = banyan.intro || 0
+    if (mat.current) mat.current.opacity = 0.13 * i
+    if (dotMat.current) dotMat.current.opacity = 0.4 * i
   })
 
   return (
     <group>
       <lineSegments geometry={lineGeo}>
-        <lineBasicMaterial ref={mat} color="#5f8a35" transparent opacity={0.13} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <lineBasicMaterial ref={mat} color="#5f8a35" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
       </lineSegments>
       <points geometry={dotGeo}>
-        <pointsMaterial ref={dotMat} color="#9fc15a" size={0.03} transparent opacity={0.4} depthWrite={false} sizeAttenuation />
+        <pointsMaterial ref={dotMat} color="#9fc15a" size={0.03} transparent opacity={0} depthWrite={false} sizeAttenuation />
       </points>
     </group>
   )
@@ -168,23 +161,19 @@ function Motes({ count = 70 }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.03} color="#cfe0a8" transparent opacity={0.25} depthWrite={false} sizeAttenuation />
+      <pointsMaterial size={0.03} color="#cfe0a8" transparent opacity={0.22} depthWrite={false} sizeAttenuation />
     </points>
   )
 }
 
 function CameraRig() {
   const { camera } = useThree()
-  const target = useRef(new THREE.Vector3(0, -0.4, 0))
+  const target = useRef(new THREE.Vector3(0, 0.3, 0))
   useFrame(() => {
-    const s = banyan.scrollCurrent
-    const camX = banyan.pointerX * 1.0
-    const camY = lerp(1.0, 3.2, s) + banyan.pointerY * 0.5
-    const camZ = lerp(11.0, 14.5, s)
+    const camX = banyan.pointerX * 1.3
+    const camY = 1.0 + banyan.pointerY * 0.7
     camera.position.x = lerp(camera.position.x, camX, 0.05)
     camera.position.y = lerp(camera.position.y, camY, 0.05)
-    camera.position.z = lerp(camera.position.z, camZ, 0.05)
-    target.current.y = lerp(target.current.y, lerp(-0.4, 1.2, s), 0.05)
     camera.lookAt(target.current)
   })
   return null
@@ -193,20 +182,20 @@ function CameraRig() {
 export default function BanyanScene() {
   const data = useMemo(() => generateBanyan({ seed: 7 }), [])
   return (
-    <div className="banyan-canvas">
+    <div className="hero-canvas">
       <Canvas
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
-        camera={{ position: [0, 1.0, 11.0], fov: 42, near: 0.1, far: 100 }}
+        camera={{ position: [0, 1.0, 12.5], fov: 42, near: 0.1, far: 100 }}
       >
         <color attach="background" args={['#05070a']} />
-        <fog attach="fog" args={['#05070a', 13, 32]} />
+        <fog attach="fog" args={['#05070a', 14, 34]} />
         <BanyanTree data={data} />
         <Floor y={data.floorY} />
         <Motes />
         <CameraRig />
         <EffectComposer>
-          <Bloom intensity={1.1} luminanceThreshold={0.1} luminanceSmoothing={0.9} mipmapBlur />
+          <Bloom intensity={1.15} luminanceThreshold={0.1} luminanceSmoothing={0.9} mipmapBlur />
           <Vignette eskil={false} offset={0.2} darkness={0.92} />
         </EffectComposer>
       </Canvas>

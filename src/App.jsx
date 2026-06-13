@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import BanyanScene from './three/BanyanScene'
 import { useScrollAndPointer } from './hooks/useScrollAndPointer'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
@@ -66,7 +65,6 @@ export default function App() {
 
   return (
     <div ref={root}>
-      <BanyanScene />
       <div className="content-layer">
         <Nav />
         <main>

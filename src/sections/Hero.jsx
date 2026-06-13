@@ -1,13 +1,18 @@
+import BanyanScene from '../three/BanyanScene'
+
 export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center md:px-10"
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center md:px-10"
     >
-      {/* soft radial just behind the text for legibility over the live tree */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -z-0 h-[120vmin] w-[120vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(14,20,10,0.72)_0%,rgba(14,20,10,0.25)_45%,transparent_70%)]" />
+      {/* the banyan tree banner — lives in the hero, scrolls away with it */}
+      <BanyanScene />
 
-      <div className="relative mx-auto w-full max-w-4xl">
+      {/* soft radial just behind the text for legibility over the live tree */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 z-[1] h-[120vmin] w-[120vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(8,12,8,0.78)_0%,rgba(8,12,8,0.3)_45%,transparent_70%)]" />
+
+      <div className="relative z-[2] mx-auto w-full max-w-4xl">
         <p className="eyebrow reveal mb-7">
           Reclutamiento de housekeeping · Hospitality
         </p>

@@ -6,6 +6,7 @@ export const banyan = {
   scrollCurrent: 0,
   pointerX: 0, // -1..1
   pointerY: 0,
+  intro: 0, // 0..1 grow-in progress of the hero tree
   // branch focus (set on click; CameraRig flies toward it)
   focusActive: false,
   focusX: 0,
