@@ -30,7 +30,7 @@ function OrbSphere() {
       const r = Math.sqrt(Math.max(0, 1 - y * y))
       const phi = i * GOLDEN
       dirs.push(new THREE.Vector3(Math.cos(phi) * r, y, Math.sin(phi) * r))
-      scales.push(0.1 + hash(i + 0.5) * 0.085) // wider size variation
+      scales.push(0.09 + hash(i + 0.5) * 0.065) // varied, smaller → glowing gaps
       phase.push(hash(i * 2.3))
       amp.push(0.55 + hash(i * 4.7) * 0.45)
     }
@@ -107,26 +107,24 @@ function OrbSphere() {
       <instancedMesh ref={mesh} args={[undefined, undefined, orbs.dirs.length]}>
         <sphereGeometry args={[1, 24, 24]} />
         <meshStandardMaterial
-          color="#ffffff"
-          metalness={0.7}
-          roughness={0.3}
-          envMapIntensity={1.0}
-          emissive="#FF9E30"
-          emissiveIntensity={0.22}
+          color="#0a0b0e"
+          metalness={0.6}
+          roughness={0.34}
+          envMapIntensity={0.5}
         />
       </instancedMesh>
-      {/* bright core that lights the orbs from within */}
+      {/* bright core — its light shows BETWEEN the dark orbs (glowing seams) */}
       <mesh>
-        <sphereGeometry args={[R - 0.18, 64, 64]} />
-        <meshBasicMaterial color="#FFAE3D" toneMapped={false} />
+        <sphereGeometry args={[R - 0.24, 64, 64]} />
+        <meshBasicMaterial color="#FF9E30" toneMapped={false} />
       </mesh>
-      {/* soft volumetric haze — deep glow bleeding outward */}
+      {/* faint rim halo only */}
       <mesh>
-        <sphereGeometry args={[R * 1.55, 48, 48]} />
-        <meshBasicMaterial color="#FF9E30" transparent opacity={0.06} side={THREE.BackSide} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <sphereGeometry args={[R * 1.18, 48, 48]} />
+        <meshBasicMaterial color="#FF9E30" transparent opacity={0.025} side={THREE.BackSide} depthWrite={false} blending={THREE.AdditiveBlending} />
       </mesh>
-      {/* point light at the core so the inner glow truly influences the orbs */}
-      <pointLight position={[0, 0, 0]} intensity={14} color="#FFB35a" distance={R * 2.4} decay={2} />
+      {/* core light rims the orbs from within */}
+      <pointLight position={[0, 0, 0]} intensity={9} color="#FFB35a" distance={R * 2.0} decay={2} />
     </group>
   )
 }
@@ -140,7 +138,7 @@ function CursorLight() {
       ref.current.position.lerp(target, 0.18)
     }
   })
-  return <pointLight ref={ref} intensity={85} color="#fff0d6" distance={16} decay={1.6} />
+  return <pointLight ref={ref} intensity={55} color="#fff0d6" distance={15} decay={1.7} />
 }
 
 function MicroParticles({ count = 1100 }) {
@@ -166,7 +164,7 @@ function MicroParticles({ count = 1100 }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.02} color="#e2e8c4" transparent opacity={0.55} depthWrite={false} sizeAttenuation />
+      <pointsMaterial size={0.018} color="#cdd6a8" transparent opacity={0.35} depthWrite={false} sizeAttenuation />
     </points>
   )
 }
@@ -187,7 +185,7 @@ export default function DomeScene() {
       className="hero-canvas"
       style={{
         background:
-          'radial-gradient(125% 90% at 50% 12%, #2f3320 0%, #161a0f 38%, #090b06 68%, #040503 100%)',
+          'radial-gradient(115% 95% at 50% 42%, #14110a 0%, #0a0905 45%, #040402 75%, #020201 100%)',
       }}
     >
       <Canvas
@@ -196,26 +194,26 @@ export default function DomeScene() {
           antialias: true,
           alpha: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2,
+          toneMappingExposure: 0.92,
         }}
         camera={{ position: [0, 0.2, 7.8], fov: 42, near: 0.1, far: 100 }}
       >
-        <fog attach="fog" args={['#090b06', 9, 24]} />
-        <ambientLight intensity={0.1} />
+        <fog attach="fog" args={['#050603', 9, 22]} />
+        <ambientLight intensity={0.05} />
         <CursorLight />
 
         <Environment resolution={256}>
-          <Lightformer form="circle" intensity={5} color="#fff1da" position={[0, 6, -3]} scale={7} />
-          <Lightformer form="circle" intensity={3} color="#FF9E30" position={[-6, 1, 2]} scale={5} />
-          <Lightformer form="rect" intensity={2} color="#c9d68a" position={[6, -1, 3]} scale={6} />
-          <Lightformer form="rect" intensity={2.5} color="#ffffff" position={[0, -5, -4]} scale={9} />
+          <Lightformer form="circle" intensity={2.2} color="#fff1da" position={[0, 6, -3]} scale={7} />
+          <Lightformer form="circle" intensity={1.6} color="#FF9E30" position={[-6, 1, 2]} scale={5} />
+          <Lightformer form="rect" intensity={1.0} color="#c9d68a" position={[6, -1, 3]} scale={6} />
+          <Lightformer form="rect" intensity={1.2} color="#ffffff" position={[0, -5, -4]} scale={9} />
         </Environment>
 
         <OrbSphere />
         <MicroParticles />
         <CameraRig />
         <EffectComposer>
-          <Bloom intensity={1.6} radius={0.85} luminanceThreshold={0.17} luminanceSmoothing={0.9} mipmapBlur />
+          <Bloom intensity={0.8} radius={0.6} luminanceThreshold={0.5} luminanceSmoothing={0.85} mipmapBlur />
           <Vignette eskil={false} offset={0.16} darkness={0.96} />
         </EffectComposer>
       </Canvas>
