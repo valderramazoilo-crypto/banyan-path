@@ -1,6 +1,6 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
+import { EffectComposer, Bloom, Vignette, DepthOfField } from '@react-three/postprocessing'
 import { Environment, Lightformer } from '@react-three/drei'
 import * as THREE from 'three'
 import { banyan } from './progressStore'
@@ -12,6 +12,11 @@ const hash = (n) => {
   const s = Math.sin(n * 127.1) * 43758.5453
   return s - Math.floor(s)
 }
+// cheap organic value-noise (~[-1,1]) for the breathing surface + soft edges
+const noise3 = (x, y, z) =>
+  Math.sin(x * 1.7 + y * 2.3) * 0.5 +
+  Math.sin(y * 1.9 + z * 2.1) * 0.3 +
+  Math.sin(z * 2.5 + x * 1.3) * 0.2
 
 function OrbSphere() {
   const spin = useRef()
@@ -29,7 +34,13 @@ function OrbSphere() {
       const y = 1 - (i / (N - 1)) * 2
       const r = Math.sqrt(Math.max(0, 1 - y * y))
       const phi = i * GOLDEN
-      dirs.push(new THREE.Vector3(Math.cos(phi) * r, y, Math.sin(phi) * r))
+      const d = new THREE.Vector3(Math.cos(phi) * r, y, Math.sin(phi) * r)
+      // organic jitter so it isn't a perfect grid
+      d.x += (hash(i * 1.1) - 0.5) * 0.06
+      d.y += (hash(i * 1.7) - 0.5) * 0.06
+      d.z += (hash(i * 2.9) - 0.5) * 0.06
+      d.normalize()
+      dirs.push(d)
       scales.push(0.09 + hash(i + 0.5) * 0.065) // varied, smaller → glowing gaps
       phase.push(hash(i * 2.3))
       amp.push(0.55 + hash(i * 4.7) * 0.45)
@@ -85,12 +96,16 @@ function OrbSphere() {
     const cdir = localCursor.current
     for (let i = 0; i < dirs.length; i++) {
       const d = dirs[i]
-      const prox = THREE.MathUtils.smoothstep(d.dot(cdir), 0.86, 1.0)
+      // organic, wobbling soft edge around the cursor (not a clean circle)
+      const edge = 0.8 + hash(i * 3.1) * 0.06 + Math.sin(t * 1.4 + phase[i] * 6.28) * 0.025
+      const prox = THREE.MathUtils.smoothstep(d.dot(cdir), edge, 1.0)
       // random self-lighting twinkle — only a sparse few peak at any moment
       const tw = Math.sin(t * 0.7 + phase[i] * Math.PI * 2)
       const twinkle = THREE.MathUtils.smoothstep(0.965, 1.0, tw) * amp[i]
-      const heat = Math.max(prox * 0.8, twinkle)
-      const pop = prox * 0.16 + twinkle * 0.05 + Math.sin(t * 1.1 + i) * 0.004
+      const heat = Math.max(prox * 0.85, twinkle)
+      // breathing surface — organic noise displacement over time
+      const breathe = noise3(d.x * 2.2 + t * 0.35, d.y * 2.2, d.z * 2.2 - t * 0.25) * 0.05
+      const pop = prox * 0.16 + twinkle * 0.05 + breathe
       dummy.position.copy(d).multiplyScalar(R + pop)
       dummy.scale.setScalar(scales[i] + prox * 0.06 + twinkle * 0.03)
       dummy.updateMatrix()
@@ -138,7 +153,7 @@ function CursorLight() {
       ref.current.position.lerp(target, 0.18)
     }
   })
-  return <pointLight ref={ref} intensity={55} color="#fff0d6" distance={15} decay={1.7} />
+  return <pointLight ref={ref} intensity={50} color="#ffe9c6" distance={20} decay={1.3} />
 }
 
 function MicroParticles({ count = 1100 }) {
@@ -213,6 +228,7 @@ export default function DomeScene() {
         <MicroParticles />
         <CameraRig />
         <EffectComposer>
+          <DepthOfField focusDistance={0.027} focalLength={0.045} bokehScale={2.2} height={480} />
           <Bloom intensity={0.8} radius={0.6} luminanceThreshold={0.5} luminanceSmoothing={0.85} mipmapBlur />
           <Vignette eskil={false} offset={0.16} darkness={0.96} />
         </EffectComposer>

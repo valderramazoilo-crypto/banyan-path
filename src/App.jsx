@@ -78,6 +78,7 @@ export default function App() {
           <Contact />
         </main>
       </div>
+      <div className="grain" />
     </div>
   )
 }

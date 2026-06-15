@@ -10,20 +10,26 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background-color: #080c08;
+  background-color: #07090a;
+  background-image: radial-gradient(140% 100% at 50% -10%, #11160e 0%, #0a0d09 40%, #06080a 100%);
+  background-attachment: fixed;
   color: #EBE0C2;
   font-family: 'Exo 2', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
-/* The 3D tree is the hero banner — it fills the hero section and scrolls away
-   with it, leaving the sections below free for their own reactive elements. */
+/* The 3D hero banner fills the hero section and scrolls away with it. */
 .hero-canvas {
   position: absolute;
   inset: 0;
@@ -36,16 +42,28 @@ body {
   z-index: 1;
 }
 
-/* Custom scrollbar — forest/ember */
+/* Film-grain overlay for a premium, textured feel */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #141d0f;
+  background: #07090a;
 }
 ::-webkit-scrollbar-thumb {
   background: #283420;
   border-radius: 6px;
+  border: 2px solid #07090a;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #909c4a;
@@ -58,16 +76,37 @@ body {
 
 @layer components {
   .eyebrow {
-    @apply font-body uppercase tracking-widest2 text-ember text-xs md:text-sm font-medium;
+    @apply inline-flex items-center gap-2.5 font-body uppercase tracking-widest2 text-ember text-xs md:text-sm font-medium;
+  }
+  .eyebrow::before {
+    content: '';
+    @apply h-px w-7 bg-ember/60;
   }
   .display-xl {
     @apply font-display font-extrabold leading-[0.95] tracking-tightest;
   }
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(180deg, #f5efdd 0%, #cdb98a 100%);
+  }
   .btn-ember {
-    @apply inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3 font-display font-semibold text-forest-deep transition-all duration-300 hover:scale-[1.03] hover:bg-ember-warm hover:shadow-[0_0_40px_-8px_rgba(255,158,48,0.8)];
+    @apply relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-ember px-7 py-3 font-display font-semibold text-forest-deep transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-8px_rgba(255,158,48,0.7)];
+  }
+  .btn-ember::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700;
+  }
+  .btn-ember:hover::after {
+    @apply translate-x-full;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-full border border-sand/30 px-7 py-3 font-display font-medium text-sand transition-all duration-300 hover:border-ember hover:text-ember;
+    @apply inline-flex items-center gap-2 rounded-full border border-sand/25 px-7 py-3 font-display font-medium text-sand/90 backdrop-blur-sm transition-all duration-300 hover:border-ember hover:text-ember hover:bg-ember/5;
+  }
+  .glass {
+    @apply border border-sand/10 bg-forest/30 backdrop-blur-md;
+  }
+  .hairline {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-sand/15 to-transparent;
   }
 }
 
@@ -82,11 +121,11 @@ body {
 .tilt {
   transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tilt-img {
   transform: translate(var(--tx, 0), var(--ty, 0)) scale(1.12);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 .tilt-glow {
