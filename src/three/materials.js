@@ -195,9 +195,64 @@ const BanyanNodeMaterial = shaderMaterial(
   `
 )
 
+// --- Roots: draw-in + a glow band that travels down on scroll -----------
+const BanyanRootMaterial = shaderMaterial(
+  {
+    uDraw: 1,
+    uSweep: 0,
+    uTime: 0,
+    uFade: 1,
+    uCursor: new THREE.Vector3(999, 999, 999),
+    uCursorR: 2.4,
+    uMoss: new THREE.Color('#7fa83e'),
+    uSand: new THREE.Color('#eaf3d6'),
+    uEmber: new THREE.Color('#FF9E30'),
+  },
+  /* glsl vertex */ `
+    attribute float aGrowth;
+    attribute float aDepth;
+    uniform vec3 uCursor;
+    uniform float uCursorR;
+    varying float vGrowth;
+    varying float vDepth;
+    varying float vNear;
+    void main() {
+      vGrowth = aGrowth;
+      vDepth = aDepth;
+      vec4 world = modelMatrix * vec4(position, 1.0);
+      vNear = smoothstep(uCursorR, 0.0, distance(world.xyz, uCursor));
+      gl_Position = projectionMatrix * viewMatrix * world;
+    }
+  `,
+  /* glsl fragment */ `
+    uniform float uDraw;
+    uniform float uSweep;
+    uniform float uTime;
+    uniform float uFade;
+    uniform vec3 uMoss;
+    uniform vec3 uSand;
+    uniform vec3 uEmber;
+    varying float vGrowth;
+    varying float vDepth;
+    varying float vNear;
+    void main() {
+      if (vGrowth > uDraw) discard;
+      vec3 base = mix(uMoss, uSand, vDepth * 0.35);
+      // a soft glow band riding the scroll position, sweeping down the roots
+      float band = smoothstep(0.16, 0.0, abs(vGrowth - uSweep));
+      float glow = max(band, vNear);
+      vec3 col = mix(base, uEmber, glow);
+      col += uEmber * band * 0.7 + uSand * 0.03 * sin(uTime + vGrowth * 24.0);
+      float alpha = (0.16 + band * 0.7 + vNear * 0.5) * uFade;
+      gl_FragColor = vec4(col, alpha);
+    }
+  `
+)
+
 extend({
   BanyanLineMaterial,
   BanyanFilamentMaterial,
   BanyanConnectionMaterial,
   BanyanNodeMaterial,
+  BanyanRootMaterial,
 })

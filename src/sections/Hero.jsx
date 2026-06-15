@@ -1,4 +1,4 @@
-import DomeScene from '../three/DomeScene'
+import RootsScene from '../three/RootsScene'
 
 export default function Hero() {
   return (
@@ -6,8 +6,8 @@ export default function Hero() {
       id="top"
       className="relative flex min-h-screen flex-col items-center justify-end overflow-hidden px-6 pb-[12vh] text-center md:px-10"
     >
-      {/* reactive dome banner — lives in the hero, scrolls away with it */}
-      <DomeScene />
+      {/* roots banner — draws in, and a glow travels down on scroll */}
+      <RootsScene />
 
       {/* soft radial just behind the text for legibility over the live tree */}
       <div className="pointer-events-none absolute left-1/2 top-[66%] z-[1] h-[110vmin] w-[130vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(8,12,8,0.82)_0%,rgba(8,12,8,0.38)_42%,transparent_68%)]" />
@@ -51,7 +51,7 @@ export default function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember/70" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
           </span>
-          Mueve el cursor — la luz lo sigue
+          Haz scroll — la luz recorre las raíces
         </p>
       </div>
     </section>
