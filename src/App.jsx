@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
 import { useScrollAndPointer } from './hooks/useScrollAndPointer'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
@@ -19,6 +20,29 @@ export default function App() {
   useScrollAndPointer()
 
   useLayoutEffect(() => {
+    // --- premium smooth scroll (Lenis) wired into GSAP/ScrollTrigger ---
+    const lenis = new Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    })
+    lenis.on('scroll', ScrollTrigger.update)
+    const onTick = (time) => lenis.raf(time * 1000)
+    gsap.ticker.add(onTick)
+    gsap.ticker.lagSmoothing(0)
+
+    // in-page anchor links scroll smoothly via Lenis (offset for the fixed nav)
+    const onAnchorClick = (e) => {
+      const a = e.target.closest('a[href^="#"]')
+      if (!a) return
+      const href = a.getAttribute('href')
+      if (href.length > 1) {
+        e.preventDefault()
+        lenis.scrollTo(href, { offset: -80 })
+      }
+    }
+    document.addEventListener('click', onAnchorClick)
+
     const ctx = gsap.context(() => {
       // --- staggered reveals -------------------------------------------
       gsap.utils.toArray('.reveal').forEach((el) => {
@@ -60,7 +84,12 @@ export default function App() {
       }
     }, root)
 
-    return () => ctx.revert()
+    return () => {
+      ctx.revert()
+      document.removeEventListener('click', onAnchorClick)
+      gsap.ticker.remove(onTick)
+      lenis.destroy()
+    }
   }, [])
 
   return (
