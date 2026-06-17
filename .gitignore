@@ -15,9 +15,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# heavy source assets (originals) — optimized web copies live in public/img
+# heavy source assets (originals) — optimized web copies live in public/
 LOGO/
 IMAGENES/
+Video/
 
 # editor / os
 .vscode/*
