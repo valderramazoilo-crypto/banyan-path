@@ -16,9 +16,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # heavy source assets (originals) — optimized web copies live in public/
-LOGO/
-IMAGENES/
-Video/
+# anchored to repo root so they don't match public/img, public/video, etc.
+/LOGO/
+/IMAGENES/
+/Video/
 
 # editor / os
 .vscode/*
