@@ -23,8 +23,7 @@ export default {
         },
       },
       fontFamily: {
-        // All Round Gothic is commercial — Montserrat is the closest free geometric match
-        display: ['Montserrat', 'system-ui', 'sans-serif'],
+        display: ['"All Round Gothic"', 'Montserrat', 'system-ui', 'sans-serif'],
         body: ['"Exo 2"', 'system-ui', 'sans-serif'],
       },
       letterSpacing: {

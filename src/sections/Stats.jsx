@@ -1,7 +1,7 @@
 const stats = [
-  ['48h', 'Para presentar candidatos preseleccionados'],
-  ['100%', 'Filtro inicial, entrevistas y verificación'],
-  ['1:1', 'Coincidencia perfecta entre persona y puesto'],
+  ['48h', 'To present pre-screened candidates'],
+  ['100%', 'Screening, interviews & background checks'],
+  ['1:1', 'The right person matched to the right role'],
 ]
 
 export default function Stats() {

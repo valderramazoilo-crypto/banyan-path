@@ -1,24 +1,24 @@
 const services = [
-  ['Contract', 'Cobertura temporal con talento listo para operar.'],
-  ['Contract-to-Hire', 'Evalúa en el puesto antes de contratar de forma fija.'],
-  ['Full-Time Contract', 'Equipos completos comprometidos a largo plazo.'],
-  ['Part-Time Contract', 'Flexibilidad para picos de demanda y temporadas.'],
-  ['Permanent', 'Colocación directa de perfiles clave y de liderazgo.'],
-  ['Remote', 'Talento distribuido coordinado y verificado.'],
+  ['Contract', 'Temporary coverage with talent ready to operate.'],
+  ['Contract-to-Hire', 'Evaluate on the job before committing to a permanent hire.'],
+  ['Full-Time Contract', 'Complete teams committed for the long term.'],
+  ['Part-Time Contract', 'Flexibility for demand peaks and seasonal coverage.'],
+  ['Permanent', 'Direct placement of key and leadership roles.'],
+  ['Peak-Season', 'Rapid coverage for openings and busy periods.'],
 ]
 
 export default function Services() {
   return (
     <section
-      id="servicios"
+      id="services"
       className="relative px-6 py-32 md:px-10"
     >
       <div className="mx-auto w-full max-w-7xl">
         <div className="mb-16 max-w-2xl">
-          <p className="eyebrow reveal mb-6">Modalidades de staffing</p>
+          <p className="eyebrow reveal mb-6">Engagement models</p>
           <h2 className="reveal font-display text-[clamp(2.2rem,5vw,4rem)] font-extrabold leading-tight tracking-tightest text-sand">
-            Una raíz para cada{' '}
-            <span className="text-ember">necesidad</span>.
+            A model for every{' '}
+            <span className="text-ember">need</span>.
           </h2>
         </div>
 
@@ -39,7 +39,7 @@ export default function Services() {
                 {desc}
               </p>
               <span className="mt-6 inline-flex items-center gap-1.5 font-body text-sm font-medium text-sand/40 transition-colors group-hover:text-ember">
-                Solicitar
+                Request
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M5 12h14M13 6l6 6-6 6"

@@ -25,7 +25,7 @@ export default function Hero() {
       <div className="relative z-[2] mx-auto w-full max-w-7xl">
         <div className="max-w-3xl">
           <p className="eyebrow reveal mb-7">
-            Reclutamiento de housekeeping · Hospitality
+            Hospitality &amp; Restaurant Staffing · Florida
           </p>
 
           <h1 className="hero-title display-xl text-left text-[clamp(2.9rem,9vw,7.5rem)] text-sand">
@@ -40,13 +40,14 @@ export default function Hero() {
           </h1>
 
           <p className="reveal mt-8 max-w-xl font-body text-lg leading-relaxed text-sand/80 md:text-xl">
-            Conectamos hoteles con talento de housekeeping de gran nivel. Una red
-            viva de conexiones profesionales — como el árbol banyan.
+            Reliable, fully compliant workforce solutions for hotels, resorts and
+            restaurants across Florida — qualified professionals, ready when you
+            need them.
           </p>
 
           <div className="reveal mt-10 flex flex-wrap items-center gap-4">
-            <a href="#contacto" className="btn-ember">
-              Encuentra tu talento
+            <a href="#contact" className="btn-ember">
+              Request talent
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M5 12h14M13 6l6 6-6 6"
@@ -57,8 +58,8 @@ export default function Hero() {
                 />
               </svg>
             </a>
-            <a href="#talento" className="btn-ghost">
-              Ver especialidades
+            <a href="#services" className="btn-ghost">
+              Our services
             </a>
           </div>
         </div>
@@ -67,7 +68,7 @@ export default function Hero() {
       {/* bottom meta + scroll cue */}
       <div className="absolute inset-x-0 bottom-7 z-[2] mx-auto flex max-w-7xl items-end justify-between px-6 md:px-10">
         <span className="hidden font-body text-xs uppercase tracking-widest2 text-sand/45 sm:block">
-          Talento verificado · Coincidencia perfecta
+          Recruited · Screened · Fully compliant
         </span>
         <div className="flex items-center gap-2 text-sand/45">
           <span className="font-body text-xs uppercase tracking-widest2">Scroll</span>

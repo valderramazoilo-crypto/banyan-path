@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import Logo from './Logo'
 
 const links = [
-  ['Esencia', '#esencia'],
-  ['Talento', '#talento'],
-  ['Servicios', '#servicios'],
-  ['Proceso', '#proceso'],
+  ['About', '#about'],
+  ['Talent', '#talent'],
+  ['Services', '#services'],
+  ['Process', '#process'],
 ]
 
 export default function Nav() {
@@ -31,8 +31,8 @@ export default function Nav() {
           scrolled ? 'py-3.5' : 'py-5'
         }`}
       >
-        <a href="#top" className="text-[1.4rem] transition-opacity hover:opacity-80">
-          <Logo />
+        <a href="#top" className="transition-opacity hover:opacity-80">
+          <Logo className="h-7" />
         </a>
 
         <nav className="hidden items-center gap-9 md:flex">
@@ -48,8 +48,8 @@ export default function Nav() {
           ))}
         </nav>
 
-        <a href="#contacto" className="btn-ember text-sm">
-          Contáctanos
+        <a href="#contact" className="btn-ember text-sm">
+          Contact us
         </a>
       </div>
     </header>

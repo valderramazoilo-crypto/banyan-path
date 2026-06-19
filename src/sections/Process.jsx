@@ -1,53 +1,66 @@
+import Picture from '../components/Picture'
+
 const steps = [
   [
     '01',
-    'Filtro inicial',
-    'Definimos el perfil y rastreamos nuestra red para preseleccionar candidatos con las habilidades y cualificaciones exactas.',
+    'Profile',
+    'process-profile',
+    'We capture the role and review candidate profiles, experience and credentials.',
   ],
   [
     '02',
-    'Entrevistas',
-    'Evaluamos experiencia, actitud y encaje cultural. Tú solo ves a quienes ya cumplen tus criterios.',
+    'Screening',
+    'process-interview',
+    'We interview and assess skills, attitude and culture fit — you only meet qualified people.',
   ],
   [
     '03',
-    'Verificación',
-    'Validamos antecedentes y referencias para que la colocación sea segura desde el primer día.',
+    'Verification',
+    'process-match',
+    'Background and reference checks ensure a safe, on-brand match.',
   ],
   [
     '04',
-    'Colocación',
-    'Conectamos a la persona correcta con el trabajo ideal y acompañamos la incorporación.',
+    'Placement',
+    'process-placement',
+    'We place the right person and support onboarding every step of the way.',
   ],
 ]
 
 export default function Process() {
   return (
-    <section id="proceso" className="process-pin relative h-screen overflow-hidden">
+    <section id="process" className="process-pin relative h-screen overflow-hidden">
       <div className="flex h-full items-center px-6 md:px-10">
         <div className="absolute left-6 top-24 z-10 md:left-10">
-          <p className="eyebrow mb-3">Cómo trabajamos</p>
+          <p className="eyebrow mb-3">How we work</p>
           <h2 className="font-display text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-tightest text-sand">
-            Del perfil a la <span className="text-ember">colocación</span>.
+            From profile to <span className="text-ember">placement</span>.
           </h2>
         </div>
 
         <div className="process-track flex gap-6 pl-2 will-change-transform">
-          {steps.map(([n, title, desc]) => (
-            <div
+          {steps.map(([n, title, slug, desc]) => (
+            <article
               key={n}
-              className="relative flex h-[60vh] w-[80vw] shrink-0 flex-col justify-end rounded-3xl border border-sand/10 bg-forest/40 p-10 backdrop-blur-sm sm:w-[55vw] lg:w-[38vw]"
+              className="relative flex h-[60vh] w-[80vw] shrink-0 flex-col justify-end overflow-hidden rounded-3xl border border-sand/10 sm:w-[58vw] lg:w-[40vw]"
             >
-              <span className="font-display text-[7rem] font-extrabold leading-none text-ember/15">
-                {n}
-              </span>
-              <h3 className="mt-2 font-display text-3xl font-bold text-sand">
-                {title}
-              </h3>
-              <p className="mt-4 max-w-md font-body text-lg leading-relaxed text-sand/65">
-                {desc}
-              </p>
-            </div>
+              <Picture
+                slug={slug}
+                alt={title}
+                sizes="(max-width: 1024px) 80vw, 40vw"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-forest-deep via-forest-deep/45 to-transparent" />
+              <div className="relative p-9">
+                <span className="font-display text-[5.5rem] font-extrabold leading-none text-ember/25">
+                  {n}
+                </span>
+                <h3 className="mt-1 font-display text-3xl font-bold text-sand">{title}</h3>
+                <p className="mt-3 max-w-md font-body text-base leading-relaxed text-sand/75">
+                  {desc}
+                </p>
+              </div>
+            </article>
           ))}
         </div>
       </div>

@@ -5,28 +5,28 @@ const roles = [
   {
     slug: 'housekeeping',
     label: 'Housekeeping',
-    desc: 'Camaristas y supervisores que cuidan cada detalle de la habitación.',
+    desc: 'Room attendants and supervisors who perfect every detail.',
     span: 'md:col-span-2 md:row-span-2',
     h: 'h-[34rem]',
   },
   {
     slug: 'front-desk',
-    label: 'Recepción',
-    desc: 'Front desk y concierge que dan la primera impresión.',
+    label: 'Front Desk',
+    desc: 'Reception and concierge who own the first impression.',
     span: '',
     h: 'h-64',
   },
   {
     slug: 'culinary',
-    label: 'Cocina',
-    desc: 'Chefs y equipos culinarios de alto estándar.',
+    label: 'Culinary',
+    desc: 'Chefs and kitchen teams to a high standard.',
     span: '',
     h: 'h-64',
   },
   {
     slug: 'bar',
     label: 'Bar & F&B',
-    desc: 'Bartenders y servicio que elevan la experiencia.',
+    desc: 'Bartenders and service staff who elevate the experience.',
     span: 'md:col-span-2',
     h: 'h-64',
   },
@@ -34,17 +34,17 @@ const roles = [
 
 export default function Roles() {
   return (
-    <section id="talento" className="relative px-6 py-32 md:px-10">
+    <section id="talent" className="relative px-6 py-32 md:px-10">
       <div className="mx-auto w-full max-w-7xl">
         <div className="mb-16 max-w-2xl">
-          <p className="eyebrow reveal mb-6">El talento que colocamos</p>
+          <p className="eyebrow reveal mb-6">Talent we place</p>
           <h2 className="reveal font-display text-[clamp(2.2rem,5vw,4rem)] font-extrabold leading-tight tracking-tightest text-sand">
-            Especialistas en{' '}
-            <span className="text-ember">housekeeping</span> y hospitality.
+            Specialists across{' '}
+            <span className="text-ember">hospitality</span> &amp; restaurants.
           </h2>
           <p className="reveal mt-6 font-body text-lg leading-relaxed text-sand/70">
-            Reclutamos, filtramos y verificamos el talento que mantiene un hotel
-            funcionando — desde la habitación hasta el restaurante.
+            We recruit, screen and verify the people who keep a property running —
+            from the guest room to the dining room.
           </p>
         </div>
 
@@ -64,9 +64,7 @@ export default function Roles() {
               <div className="tilt-glow" />
               <div className="absolute inset-x-0 bottom-0 p-7 tilt-pop">
                 <div className="mb-3 h-1 w-8 rounded-full bg-ember transition-all duration-300 group-hover:w-14" />
-                <h3 className="font-display text-2xl font-bold text-sand">
-                  {r.label}
-                </h3>
+                <h3 className="font-display text-2xl font-bold text-sand">{r.label}</h3>
                 <p className="mt-1.5 max-w-sm font-body text-sm leading-relaxed text-sand/70">
                   {r.desc}
                 </p>

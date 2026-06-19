@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
 import { useScrollAndPointer } from './hooks/useScrollAndPointer'
+import ParticleField from './components/ParticleField'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
 import Essence from './sections/Essence'
@@ -112,6 +113,7 @@ export default function App() {
 
   return (
     <div ref={root}>
+      <ParticleField />
       <div className="content-layer">
         <Nav />
         <main>

@@ -2,9 +2,10 @@ import Picture from '../components/Picture'
 import TiltCard from '../components/TiltCard'
 
 const points = [
-  'Filtro inicial y preselección',
-  'Entrevistas y evaluación',
-  'Verificación de antecedentes',
+  'Recruitment and screening',
+  'Payroll and workforce management',
+  "Workers' Compensation coverage",
+  'Full labor law compliance',
 ]
 
 export default function Companies() {
@@ -15,7 +16,7 @@ export default function Companies() {
           <TiltCard max={0} lift={22} className="relative min-h-[18rem] overflow-hidden">
             <Picture
               slug="recruitment"
-              alt="Equipo de selección de Banyan Path"
+              alt="Banyan Path recruitment team"
               sizes="(max-width: 768px) 100vw, 50vw"
               className="tilt-img absolute inset-0 h-full w-full object-cover"
             />
@@ -23,11 +24,11 @@ export default function Companies() {
             <div className="tilt-glow" />
           </TiltCard>
           <div className="bg-forest-deep/80 p-10 backdrop-blur-sm md:p-14">
-            <p className="eyebrow reveal mb-5">Para hoteles y empresas</p>
+            <p className="eyebrow reveal mb-5">Fully compliant &amp; workforce ready</p>
             <h2 className="reveal font-display text-3xl font-extrabold leading-tight tracking-tightest text-sand md:text-4xl">
-              Tú defines el perfil.
+              You define the role.
               <br />
-              Nosotros hacemos el resto.
+              We handle the rest.
             </h2>
             <ul className="reveal mt-8 space-y-3">
               {points.map((p) => (
@@ -47,8 +48,8 @@ export default function Companies() {
                 </li>
               ))}
             </ul>
-            <a href="#contacto" className="btn-ember reveal mt-10">
-              Solicitar talento
+            <a href="#contact" className="btn-ember reveal mt-10">
+              Request talent
             </a>
           </div>
         </div>

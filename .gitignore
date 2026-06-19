@@ -20,6 +20,7 @@ yarn-error.log*
 /LOGO/
 /IMAGENES/
 /Video/
+/Tipografia/
 
 # editor / os
 .vscode/*
