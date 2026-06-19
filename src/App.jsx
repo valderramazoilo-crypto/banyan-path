@@ -44,6 +44,24 @@ export default function App() {
     document.addEventListener('click', onAnchorClick)
 
     const ctx = gsap.context(() => {
+      // --- hero title: cascading mask reveal on load -------------------
+      const titleLines = gsap.utils.toArray('.hero-title .line-inner')
+      if (titleLines.length) {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (reduce) {
+          gsap.set(titleLines, { y: '0%' })
+        } else {
+          gsap.set(titleLines, { yPercent: 115 })
+          gsap.to(titleLines, {
+            yPercent: 0,
+            duration: 1.15,
+            ease: 'power4.out',
+            stagger: 0.12,
+            delay: 0.2,
+          })
+        }
+      }
+
       // --- staggered reveals -------------------------------------------
       gsap.utils.toArray('.reveal').forEach((el) => {
         gsap.fromTo(

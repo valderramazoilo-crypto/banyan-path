@@ -28,10 +28,15 @@ export default function Hero() {
             Reclutamiento de housekeeping · Hospitality
           </p>
 
-          <h1 className="display-xl reveal text-left text-[clamp(2.9rem,9vw,7.5rem)] text-sand">
-            ALL WE DO
-            <br />
-            IS <span className="text-ember">STAFFING</span>
+          <h1 className="hero-title display-xl text-left text-[clamp(2.9rem,9vw,7.5rem)] text-sand">
+            <span className="line-mask">
+              <span className="line-inner">ALL WE DO</span>
+            </span>
+            <span className="line-mask">
+              <span className="line-inner">
+                IS <span className="title-accent text-ember">STAFFING</span>
+              </span>
+            </span>
           </h1>
 
           <p className="reveal mt-8 max-w-xl font-body text-lg leading-relaxed text-sand/80 md:text-xl">
