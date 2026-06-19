@@ -23,7 +23,7 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"All Round Gothic"', 'Montserrat', 'system-ui', 'sans-serif'],
+        display: ['"Jost"', 'system-ui', 'sans-serif'],
         body: ['"Exo 2"', 'system-ui', 'sans-serif'],
       },
       letterSpacing: {

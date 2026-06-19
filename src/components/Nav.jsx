@@ -35,15 +35,15 @@ export default function Nav() {
           <Logo className="h-7" />
         </a>
 
-        <nav className="hidden items-center gap-9 md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-sand/12 bg-forest-deep/40 p-1.5 backdrop-blur-md md:flex">
           {links.map(([label, href]) => (
             <a
               key={href}
               href={href}
-              className="group relative font-body text-sm uppercase tracking-widest text-sand/70 transition-colors hover:text-sand"
+              className="group relative rounded-full px-4 py-2 font-display text-sm font-medium uppercase tracking-widest text-sand/80 transition-all duration-300 hover:bg-ember/10 hover:text-ember"
             >
               {label}
-              <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-ember transition-all duration-300 group-hover:w-full" />
+              <span className="absolute bottom-1 left-1/2 h-0.5 w-0 -translate-x-1/2 rounded-full bg-ember transition-all duration-300 group-hover:w-1/2" />
             </a>
           ))}
         </nav>

@@ -47,20 +47,17 @@ export default function App() {
     const ctx = gsap.context(() => {
       // --- hero title: cascading mask reveal on load -------------------
       const titleLines = gsap.utils.toArray('.hero-title .line-inner')
-      if (titleLines.length) {
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        if (reduce) {
-          gsap.set(titleLines, { y: '0%' })
-        } else {
-          gsap.set(titleLines, { yPercent: 115 })
-          gsap.to(titleLines, {
-            yPercent: 0,
-            duration: 1.15,
-            ease: 'power4.out',
-            stagger: 0.12,
-            delay: 0.2,
-          })
-        }
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (titleLines.length && !reduce) {
+        // `from` leaves the lines at their natural (visible) state, so the title
+        // is never stuck hidden if anything interrupts the tween
+        gsap.from(titleLines, {
+          yPercent: 115,
+          duration: 1.15,
+          ease: 'power4.out',
+          stagger: 0.12,
+          delay: 0.2,
+        })
       }
 
       // --- staggered reveals -------------------------------------------
