@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Picture from '../components/Picture'
 import TiltCard from '../components/TiltCard'
 
@@ -48,9 +49,9 @@ export default function Companies() {
                 </li>
               ))}
             </ul>
-            <a href="#contact" className="btn-ember reveal mt-10">
+            <Link to="/contact" className="btn-ember reveal mt-10">
               Request talent
-            </a>
+            </Link>
           </div>
         </div>
       </div>

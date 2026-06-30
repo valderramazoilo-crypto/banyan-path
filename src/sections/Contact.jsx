@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Logo from '../components/Logo'
 
 export default function Contact() {
@@ -21,11 +22,14 @@ export default function Contact() {
         </p>
 
         <div className="reveal mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <a href="mailto:operations@banyanpath.com" className="btn-ember">
+          <Link to="/contact" className="btn-ember">
+            Request talent
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+          <a href="mailto:operations@banyanpath.com" className="btn-ghost">
             operations@banyanpath.com
-          </a>
-          <a href="#top" className="btn-ghost">
-            Back to top
           </a>
         </div>
       </div>

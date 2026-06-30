@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function Hero() {
   return (
     <section
@@ -46,7 +48,7 @@ export default function Hero() {
           </p>
 
           <div className="reveal mt-10 flex flex-wrap items-center gap-4">
-            <a href="#contact" className="btn-ember">
+            <Link to="/contact" className="btn-ember">
               Request talent
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path
@@ -57,7 +59,7 @@ export default function Hero() {
                   strokeLinejoin="round"
                 />
               </svg>
-            </a>
+            </Link>
             <a href="#services" className="btn-ghost">
               Our services
             </a>

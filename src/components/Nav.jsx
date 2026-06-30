@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Logo from './Logo'
 
 const links = [
@@ -35,22 +36,21 @@ export default function Nav() {
           <Logo className="h-7" />
         </a>
 
-        <nav className="hidden items-center gap-1 rounded-full border border-sand/12 bg-forest-deep/40 p-1.5 backdrop-blur-md md:flex">
+        <nav className="hidden items-center gap-0.5 rounded-full border border-white/10 bg-white/[0.05] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_10px_30px_-14px_rgba(0,0,0,0.7)] backdrop-blur-2xl md:flex">
           {links.map(([label, href]) => (
             <a
               key={href}
               href={href}
-              className="group relative rounded-full px-4 py-2 font-display text-sm font-medium uppercase tracking-widest text-sand/80 transition-all duration-300 hover:bg-ember/10 hover:text-ember"
+              className="rounded-full px-4 py-1.5 font-body text-[13px] uppercase tracking-[0.14em] text-sand/65 transition-colors duration-300 hover:bg-white/[0.07] hover:text-sand"
             >
               {label}
-              <span className="absolute bottom-1 left-1/2 h-0.5 w-0 -translate-x-1/2 rounded-full bg-ember transition-all duration-300 group-hover:w-1/2" />
             </a>
           ))}
         </nav>
 
-        <a href="#contact" className="btn-ember text-sm">
+        <Link to="/contact" className="btn-ember text-sm">
           Contact us
-        </a>
+        </Link>
       </div>
     </header>
   )
