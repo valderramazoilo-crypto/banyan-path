@@ -187,6 +187,11 @@ body {
 .title-accent {
   animation: accent-glow 3.2s ease-in-out infinite;
 }
+/* magnetic headline letters (transformed per-frame from the hero loop) */
+.magnet-char {
+  display: inline-block;
+  will-change: transform;
+}
 @keyframes accent-glow {
   0%,
   100% {
