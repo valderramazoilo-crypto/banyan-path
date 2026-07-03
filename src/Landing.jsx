@@ -10,6 +10,7 @@ import Roles from './sections/Roles'
 import Companies from './sections/Companies'
 import Stats from './sections/Stats'
 import Services from './sections/Services'
+import Gallery from './sections/Gallery'
 import Process from './sections/Process'
 import Contact from './sections/Contact'
 
@@ -115,6 +116,7 @@ export default function Landing() {
         <Stats />
         <Services />
         <Companies />
+        <Gallery />
         <Process />
         <Contact />
       </main>
