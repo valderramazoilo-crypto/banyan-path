@@ -72,24 +72,18 @@ void main(){
   float hY = heightAt(p + vec2(0.0, e));
   vec2 grad = vec2(hX - hC, hY - hC) / e;
 
-  // refract the image through the surface
-  vec2 off = -grad * 0.010;
+  // gentle refraction through the surface (no chromatic aberration)
+  vec2 off = -grad * 0.0055;
   vec2 cuv = coverUv(vUv + off);
+  vec3 col = texture2D(uTex, cuv).rgb;
 
-  // faint chromatic split only where the surface is disturbed
-  float mag = length(grad) * 0.006;
-  vec3 col;
-  col.r = texture2D(uTex, cuv + off * 0.35).r;
-  col.g = texture2D(uTex, cuv).g;
-  col.b = texture2D(uTex, cuv - off * 0.35).b;
-
-  // lighting: crests catch a soft specular glint, troughs darken slightly
-  vec3 n = normalize(vec3(-grad * 0.55, 1.0));
+  // lighting: a restrained specular glint on the crests, faint trough shading
+  vec3 n = normalize(vec3(-grad * 0.4, 1.0));
   vec3 L = normalize(vec3(-0.4, 0.65, 0.7));
   vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
-  float spec = pow(max(dot(n, H), 0.0), 90.0);
-  col += spec * vec3(1.0, 0.94, 0.8) * 0.55;
-  col *= 1.0 + hC * 1.6;
+  float spec = pow(max(dot(n, H), 0.0), 110.0);
+  col += spec * vec3(1.0, 0.95, 0.85) * 0.22;
+  col *= 1.0 + hC * 0.7;
 
   gl_FragColor = vec4(col, 1.0);
 }`
@@ -233,7 +227,7 @@ export default function WaterCard({ src, alt = '', className = '' }) {
       const [u, v] = uvOf(e)
       lastU = u
       lastV = v
-      spawn(u, v, 0.9)
+      spawn(u, v, 0.55)
     }
     const onMove = (e) => {
       const [u, v] = uvOf(e)
@@ -243,7 +237,7 @@ export default function WaterCard({ src, alt = '', className = '' }) {
       const moved = Math.hypot(dx, dy)
       // drop a new ripple roughly every few % of travel (throttled in time)
       if (moved > 0.055 && t - lastBirth > 0.045) {
-        const amp = Math.min(1.15, 0.5 + moved * 5.0) // faster strokes → bigger waves
+        const amp = Math.min(0.7, 0.3 + moved * 3.0) // faster strokes → slightly bigger waves
         spawn(u, v, amp)
         lastU = u
         lastV = v
@@ -251,7 +245,7 @@ export default function WaterCard({ src, alt = '', className = '' }) {
     }
     const onDown = (e) => {
       const [u, v] = uvOf(e)
-      spawn(u, v, 1.9) // splash
+      spawn(u, v, 1.1) // splash
     }
     wrap.addEventListener('pointerenter', onEnter)
     wrap.addEventListener('pointermove', onMove)
