@@ -1,6 +1,8 @@
+// Only claims backed by the company's own promise: full screening/interviews/
+// background checks, statewide Florida coverage, right person ↔ right job.
 const stats = [
-  ['48h', 'To present pre-screened candidates'],
-  ['100%', 'Screening, interviews & background checks'],
+  ['100%', 'Screened, interviewed & background-checked'],
+  ['FL', 'Serving properties throughout Florida'],
   ['1:1', 'The right person matched to the right role'],
 ]
 

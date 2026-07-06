@@ -131,6 +131,13 @@ body {
   color: #141d0f;
 }
 
+/* keyboard navigation */
+:focus-visible {
+  outline: 2px solid #FF9E30;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 @layer components {
   .eyebrow {
     @apply inline-flex items-center gap-2.5 font-body uppercase tracking-widest2 text-ember text-xs md:text-sm font-medium;

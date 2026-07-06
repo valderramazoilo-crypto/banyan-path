@@ -11,6 +11,7 @@ const links = [
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -18,6 +19,14 @@ export default function Nav() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  // lock page scroll while the mobile menu is open
+  useEffect(() => {
+    document.documentElement.style.overflow = open ? 'hidden' : ''
+    return () => {
+      document.documentElement.style.overflow = ''
+    }
+  }, [open])
 
   return (
     <header
@@ -48,10 +57,60 @@ export default function Nav() {
           ))}
         </nav>
 
-        <Link to="/contact" className="btn-ember text-sm">
-          Contact us
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/contact" className="btn-ember hidden text-sm sm:inline-flex">
+            Contact us
+          </Link>
+
+          {/* mobile menu toggle */}
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            className="grid h-11 w-11 place-items-center rounded-full border border-sand/20 bg-forest-deep/50 text-sand backdrop-blur-md transition-colors hover:border-ember hover:text-ember md:hidden"
+          >
+            {open ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* mobile menu overlay */}
+      {open && (
+        <div className="fixed inset-0 top-[64px] z-40 flex flex-col bg-forest-deep/95 backdrop-blur-xl md:hidden">
+          <nav className="flex flex-1 flex-col items-center justify-center gap-2 px-8">
+            {links.map(([label, href], i) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => setOpen(false)}
+                className="w-full rounded-2xl px-6 py-4 text-center font-display text-2xl font-semibold text-sand transition-colors hover:bg-white/[0.06] hover:text-ember"
+                style={{ transitionDelay: `${i * 30}ms` }}
+              >
+                {label}
+              </a>
+            ))}
+            <Link
+              to="/contact"
+              onClick={() => setOpen(false)}
+              className="btn-ember mt-6 w-full justify-center text-base"
+            >
+              Contact us
+            </Link>
+          </nav>
+          <p className="pb-10 text-center font-body text-xs uppercase tracking-widest2 text-sand/40">
+            All we do is staffing · Florida
+          </p>
+        </div>
+      )}
     </header>
   )
 }

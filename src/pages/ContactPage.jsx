@@ -6,14 +6,36 @@ const field =
   'w-full rounded-xl border border-sand/15 bg-forest-deep/50 px-4 py-3 font-body text-sand placeholder-sand/35 outline-none transition-colors focus:border-ember focus:bg-forest-deep/70'
 const labelCls = 'mb-2 block font-body text-xs uppercase tracking-widest text-sand/55'
 
+// Set VITE_FORM_ENDPOINT (e.g. a Formspree URL like https://formspree.io/f/xxxx)
+// to capture submissions server-side; without it the form falls back to opening
+// the visitor's mail client.
+const ENDPOINT = import.meta.env.VITE_FORM_ENDPOINT
+
 export default function ContactPage() {
-  const [sent, setSent] = useState(false)
+  const [status, setStatus] = useState('idle') // idle | sending | sent | mailto | error
+  const sent = status === 'sent' || status === 'mailto'
   useEffect(() => window.scrollTo(0, 0), [])
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
     const get = (k) => (f.get(k) || '').toString().trim()
+
+    if (ENDPOINT) {
+      setStatus('sending')
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: f,
+        })
+        setStatus(res.ok ? 'sent' : 'error')
+      } catch {
+        setStatus('error')
+      }
+      return
+    }
+
     const subject = `Talent request — ${get('name') || 'Banyan Path'}`
     const body = [
       `Name: ${get('name')}`,
@@ -25,12 +47,10 @@ export default function ContactPage() {
       '',
       get('message'),
     ].join('\n')
-    // No backend yet — open the user's mail client. Swap for a Formspree/Netlify
-    // endpoint here to capture submissions server-side.
     window.location.href = `mailto:operations@banyanpath.com?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`
-    setSent(true)
+    setStatus('mailto')
   }
 
   return (
@@ -61,7 +81,7 @@ export default function ContactPage() {
           </h1>
           <p className="mt-7 max-w-md font-body text-lg leading-relaxed text-sand/70">
             Tell us the roles you need and a few details about your property. Our
-            team will get back to you within one business day.
+            team will get back to you shortly.
           </p>
 
           <div className="mt-10 space-y-4">
@@ -91,13 +111,16 @@ export default function ContactPage() {
                   <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
-              <h2 className="font-display text-2xl font-bold text-sand">Almost there</h2>
+              <h2 className="font-display text-2xl font-bold text-sand">
+                {status === 'sent' ? 'Request sent' : 'Almost there'}
+              </h2>
               <p className="mt-3 max-w-xs font-body text-sand/65">
-                Your email app should have opened with the request ready to send.
-                If not, write us at operations@banyanpath.com.
+                {status === 'sent'
+                  ? "Thank you — our team will be in touch shortly."
+                  : 'Your email app should have opened with the request ready to send. If not, write us at operations@banyanpath.com.'}
               </p>
               <button
-                onClick={() => setSent(false)}
+                onClick={() => setStatus('idle')}
                 className="btn-ghost mt-7"
                 type="button"
               >
@@ -113,7 +136,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <label htmlFor="company" className={labelCls}>Company / property *</label>
-                  <input id="company" name="company" required className={field} placeholder="Luxoria Hotels" />
+                  <input id="company" name="company" required className={field} placeholder="Your property name" />
                 </div>
                 <div>
                   <label htmlFor="email" className={labelCls}>Email *</label>
@@ -136,12 +159,21 @@ export default function ContactPage() {
                 <label htmlFor="message" className={labelCls}>Anything else?</label>
                 <textarea id="message" name="message" rows="4" className={`${field} resize-none`} placeholder="Dates, location, requirements…" />
               </div>
-              <button type="submit" className="btn-ember w-full justify-center">
-                Send request
+              <button
+                type="submit"
+                disabled={status === 'sending'}
+                className="btn-ember w-full justify-center disabled:pointer-events-none disabled:opacity-60"
+              >
+                {status === 'sending' ? 'Sending…' : 'Send request'}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
+              {status === 'error' && (
+                <p role="alert" className="text-center font-body text-sm text-ember">
+                  Something went wrong — please retry or email operations@banyanpath.com.
+                </p>
+              )}
               <p className="text-center font-body text-xs text-sand/40">
                 We'll never share your information.
               </p>

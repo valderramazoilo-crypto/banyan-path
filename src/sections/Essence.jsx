@@ -5,6 +5,7 @@ const values = [
   ['Fast & flexible', 'Responsive service models that scale with your needs.'],
   ['Trained & reliable', 'Professional, dependable personnel you can trust.'],
   ['Dedicated support', 'Personalized service and a partner who stays close.'],
+  ['Accountable', 'Committed to quality, accountability and performance.'],
 ]
 
 export default function Essence() {
@@ -25,9 +26,9 @@ export default function Essence() {
               <div className="tilt-glow" />
             </TiltCard>
             <div className="absolute -bottom-6 -right-4 rounded-2xl border border-sand/15 bg-forest-deep/70 px-6 py-4 backdrop-blur-md sm:-right-6">
-              <div className="font-display text-3xl font-extrabold text-ember">+48h</div>
+              <div className="font-display text-3xl font-extrabold text-ember">360°</div>
               <div className="font-body text-xs uppercase tracking-widest text-sand/60">
-                Candidates ready
+                Recruitment to payroll
               </div>
             </div>
           </div>
@@ -52,7 +53,7 @@ export default function Essence() {
           </div>
         </div>
 
-        <div className="reveal mt-20 grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="reveal mt-20 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {values.map(([t, d]) => (
             <div
               key={t}

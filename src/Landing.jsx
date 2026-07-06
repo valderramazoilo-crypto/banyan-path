@@ -2,7 +2,6 @@ import { useLayoutEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
-import { useScrollAndPointer } from './hooks/useScrollAndPointer'
 import Nav from './components/Nav'
 import Hero from './sections/Hero'
 import Essence from './sections/Essence'
@@ -12,13 +11,13 @@ import Stats from './sections/Stats'
 import Services from './sections/Services'
 import Gallery from './sections/Gallery'
 import Process from './sections/Process'
+import PathBand from './sections/PathBand'
 import Contact from './sections/Contact'
 
 gsap.registerPlugin(ScrollTrigger)
 
 export default function Landing() {
   const root = useRef(null)
-  useScrollAndPointer()
 
   useLayoutEffect(() => {
     // --- premium smooth scroll (Lenis) wired into GSAP/ScrollTrigger ---
@@ -118,6 +117,7 @@ export default function Landing() {
         <Companies />
         <Gallery />
         <Process />
+        <PathBand />
         <Contact />
       </main>
     </div>
