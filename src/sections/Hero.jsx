@@ -69,7 +69,7 @@ export default function Hero() {
 
       // flashlight: the dark grade opens around the cursor
       if (spotRef.current) {
-        spotRef.current.style.background = `radial-gradient(circle 400px at ${px}px ${py}px, rgba(5,7,10,0) 0%, rgba(5,7,10,0.32) 48%, rgba(5,7,10,0.6) 100%)`
+        spotRef.current.style.background = `radial-gradient(circle 440px at ${px}px ${py}px, rgba(5,7,10,0) 0%, rgba(5,7,10,0.2) 52%, rgba(5,7,10,0.42) 100%)`
       }
       // warm ember halo riding with it
       if (glowRef.current) {
@@ -150,9 +150,9 @@ export default function Hero() {
         <source src="/video/hero.mp4" type="video/mp4" />
       </video>
 
-      {/* legibility gradients */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#05070a] via-[#05070a]/70 to-[#05070a]/15" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#080c08] via-transparent to-[#05070a]/50" />
+      {/* legibility gradients (kept light so the video shows through) */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#05070a]/90 via-[#05070a]/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#080c08]/90 via-transparent to-[#05070a]/35" />
 
       {/* cursor flashlight + ember halo */}
       <div
@@ -160,7 +160,7 @@ export default function Hero() {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle 420px at 50% 45%, rgba(5,7,10,0) 0%, rgba(5,7,10,0.3) 50%, rgba(5,7,10,0.55) 100%)',
+            'radial-gradient(circle 460px at 50% 45%, rgba(5,7,10,0) 0%, rgba(5,7,10,0.18) 55%, rgba(5,7,10,0.38) 100%)',
         }}
       />
       <div ref={glowRef} className="absolute inset-0 mix-blend-screen" />
