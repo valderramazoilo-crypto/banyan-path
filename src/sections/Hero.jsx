@@ -54,8 +54,13 @@ export default function Hero() {
     const target = { x: 0.5, y: 0.45 }
     const cur = { x: 0.5, y: 0.45 }
     let raf = 0
+    let hasCursor = false // effects stay dormant until the pointer really moves
 
     const loop = () => {
+      if (!hasCursor) {
+        raf = requestAnimationFrame(loop)
+        return
+      }
       cur.x += (target.x - cur.x) * 0.09
       cur.y += (target.y - cur.y) * 0.09
       const r = sec.getBoundingClientRect()
@@ -104,6 +109,11 @@ export default function Hero() {
       const r = sec.getBoundingClientRect()
       target.x = (e.clientX - r.left) / r.width
       target.y = (e.clientY - r.top) / r.height
+      if (!hasCursor) {
+        hasCursor = true
+        cur.x = target.x
+        cur.y = target.y
+      }
     }
     const onLeave = () => {
       target.x = 0.5
