@@ -97,7 +97,19 @@ export default function Landing() {
       }
     }, root)
 
+    // SPA route changes don't fire window 'load', so ScrollTrigger start/end
+    // positions can be measured before the video/images/fonts settle and every
+    // below-the-fold reveal gets stuck hidden. Refresh once layout is ready.
+    const refresh = () => ScrollTrigger.refresh()
+    const raf = requestAnimationFrame(refresh)
+    const t = setTimeout(refresh, 400)
+    document.fonts?.ready.then(refresh)
+    window.addEventListener('load', refresh)
+
     return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(t)
+      window.removeEventListener('load', refresh)
       ctx.revert()
       document.removeEventListener('click', onAnchorClick)
       gsap.ticker.remove(onTick)
