@@ -43,40 +43,24 @@ export default function Landing() {
     }
     document.addEventListener('click', onAnchorClick)
 
-    const ctx = gsap.context(() => {
-      // --- hero title: cascading mask reveal on load -------------------
-      const titleLines = gsap.utils.toArray('.hero-title .line-inner')
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      if (titleLines.length && !reduce) {
-        gsap.from(titleLines, {
-          yPercent: 115,
-          duration: 1.15,
-          ease: 'power4.out',
-          stagger: 0.12,
-          delay: 0.2,
-        })
-      }
-
-      // --- staggered reveals -------------------------------------------
-      gsap.utils.toArray('.reveal').forEach((el) => {
-        gsap.fromTo(
-          el,
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: el,
-              start: 'top 85%',
-              toggleActions: 'play none none reverse',
-            },
+    // --- reveal-on-scroll via native IntersectionObserver ---------------
+    // (CSS-driven; immune to the GSAP-ticker freeze that could strand every
+    // reveal hidden when navigating back to this page in the SPA)
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('in')
+            io.unobserve(e.target)
           }
-        )
-      })
+        })
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.04 }
+    )
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el))
 
-      // --- pinned horizontal process track -----------------------------
+    const ctx = gsap.context(() => {
+      // --- pinned horizontal process track (scrub — scroll-driven) -------
       const track = document.querySelector('.process-track')
       const pin = document.querySelector('.process-pin')
       if (track && pin) {
@@ -110,6 +94,7 @@ export default function Landing() {
       cancelAnimationFrame(raf)
       clearTimeout(t)
       window.removeEventListener('load', refresh)
+      io.disconnect()
       ctx.revert()
       document.removeEventListener('click', onAnchorClick)
       gsap.ticker.remove(onTick)

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 import Picture from '../components/Picture'
 import TiltCard from '../components/TiltCard'
 

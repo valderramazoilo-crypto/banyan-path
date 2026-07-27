@@ -174,14 +174,20 @@ body {
   }
 }
 
-/* Reveal helpers driven by GSAP */
+/* Reveal-on-scroll — a native IntersectionObserver adds `.in`. CSS-driven so it
+   can never get stuck hidden if a JS animation library misbehaves on SPA remount. */
 .reveal {
   opacity: 0;
   transform: translateY(40px);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, opacity;
 }
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
 
-/* --- Hero title: per-line mask reveal --- */
+/* --- Hero title: per-line mask reveal (CSS animation, runs on mount) --- */
 .hero-title .line-mask {
   display: block;
   overflow: hidden;
@@ -190,6 +196,21 @@ body {
 .hero-title .line-inner {
   display: block;
   will-change: transform;
+  animation: line-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-title .line-mask:nth-of-type(1) .line-inner {
+  animation-delay: 0.15s;
+}
+.hero-title .line-mask:nth-of-type(2) .line-inner {
+  animation-delay: 0.3s;
+}
+@keyframes line-rise {
+  from {
+    transform: translateY(115%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 .title-accent {
   animation: accent-glow 3.2s ease-in-out infinite;
@@ -210,10 +231,16 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-title .line-inner {
+    animation: none;
     transform: none;
   }
   .title-accent {
     animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 

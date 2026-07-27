@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 
 // Cursor-alive hero: a cinematic flashlight opens the darkness around the
 // pointer, the video parallaxes in depth, and the headline letters are

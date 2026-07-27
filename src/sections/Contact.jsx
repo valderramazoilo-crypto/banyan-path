@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 import Logo from '../components/Logo'
 
 export default function Contact() {

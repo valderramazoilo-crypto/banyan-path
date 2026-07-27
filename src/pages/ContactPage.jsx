@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../router'
 import Logo from '../components/Logo'
 
 const iconCls = 'grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember/15 text-ember'
