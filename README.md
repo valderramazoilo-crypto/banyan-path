@@ -46,8 +46,8 @@ node scripts/optimize-images.mjs   # regenera los .webp de public/img (sharp)
 ## Deploy
 
 Cualquier hosting estático. Al ser SPA, todas las rutas deben servir
-`index.html` — ya incluido para Netlify en `public/_redirects`
-(en Vercel/otros, configurar el rewrite equivalente).
+`index.html` — ya incluido: `public/_redirects` (Netlify) y `vercel.json` (Vercel)
+(en otros hostings, configurar el rewrite equivalente).
 
 SEO incluido en `index.html`: meta description, Open Graph, canonical,
 theme-color y datos estructurados (`EmploymentAgency` con dirección, teléfonos
