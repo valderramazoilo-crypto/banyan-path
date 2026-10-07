@@ -21,12 +21,12 @@ export default function Companies() {
               sizes="(max-width: 768px) 100vw, 50vw"
               className="tilt-img absolute inset-0 h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-forest-deep/40 to-forest-deep" />
+            <div className="absolute inset-0 bg-linear-to-r from-forest-deep/40 to-forest-deep" />
             <div className="tilt-glow" />
           </TiltCard>
-          <div className="bg-forest-deep/80 p-10 backdrop-blur-sm md:p-14">
+          <div className="bg-forest-deep/80 p-10 backdrop-blur-xs md:p-14">
             <p className="eyebrow reveal mb-5">Fully compliant &amp; workforce ready</p>
-            <h2 className="reveal font-display text-3xl font-extrabold leading-tight tracking-tightest text-sand md:text-4xl">
+            <h2 className="reveal font-display text-3xl font-extrabold leading-[1.12] tracking-tightest text-sand md:text-4xl">
               You define the role.
               <br />
               We handle the rest.

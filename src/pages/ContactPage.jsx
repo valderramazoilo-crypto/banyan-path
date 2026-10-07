@@ -38,7 +38,7 @@ export default function ContactPage() {
         {/* info grid */}
         <div className="mt-16 grid gap-px overflow-hidden rounded-3xl border border-sand/10 bg-sand/10 md:grid-cols-3">
           {/* contacts */}
-          <div className="bg-forest-deep/80 p-9 backdrop-blur-sm">
+          <div className="bg-forest-deep/80 p-9 backdrop-blur-xs">
             <div className="mb-6 flex items-center gap-3">
               <span className={iconCls}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -69,7 +69,7 @@ export default function ContactPage() {
           </div>
 
           {/* work hours */}
-          <div className="bg-forest-deep/80 p-9 backdrop-blur-sm">
+          <div className="bg-forest-deep/80 p-9 backdrop-blur-xs">
             <div className="mb-6 flex items-center gap-3">
               <span className={iconCls}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -89,7 +89,7 @@ export default function ContactPage() {
           </div>
 
           {/* office */}
-          <div className="bg-forest-deep/80 p-9 backdrop-blur-sm">
+          <div className="bg-forest-deep/80 p-9 backdrop-blur-xs">
             <div className="mb-6 flex items-center gap-3">
               <span className={iconCls}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">

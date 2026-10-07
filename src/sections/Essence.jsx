@@ -22,7 +22,7 @@ export default function Essence() {
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="tilt-img aspect-[4/3] w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-tr from-forest-deep/70 via-transparent to-ember/10" />
+              <div className="absolute inset-0 bg-linear-to-tr from-forest-deep/70 via-transparent to-ember/10" />
               <div className="tilt-glow" />
             </TiltCard>
             <div className="absolute -bottom-6 -right-4 rounded-2xl border border-sand/15 bg-forest-deep/70 px-6 py-4 backdrop-blur-md sm:-right-6">
@@ -57,7 +57,7 @@ export default function Essence() {
           {values.map(([t, d]) => (
             <div
               key={t}
-              className="group rounded-2xl border border-sand/10 bg-forest/40 p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-ember/50 hover:bg-forest-mid/50"
+              className="group rounded-2xl border border-sand/10 bg-forest/40 p-7 backdrop-blur-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-ember/50 hover:bg-forest-mid/50"
             >
               <div className="mb-4 h-1 w-8 rounded-full bg-ember transition-all duration-300 group-hover:w-14" />
               <h3 className="font-display text-xl font-bold text-sand">{t}</h3>

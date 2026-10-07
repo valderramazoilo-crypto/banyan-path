@@ -26,7 +26,7 @@ export default function Services() {
           {services.map(([title, desc], i) => (
             <article
               key={title}
-              className="reveal group relative overflow-hidden rounded-2xl border border-sand/10 bg-forest/30 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-ember/40"
+              className="reveal group relative overflow-hidden rounded-2xl border border-sand/10 bg-forest/30 p-8 backdrop-blur-xs transition-all duration-300 hover:-translate-y-2 hover:border-ember/40"
             >
               <div className="absolute inset-0 -z-10 bg-banyan-gradient opacity-0 transition-opacity duration-500 group-hover:opacity-10" />
               <span className="font-display text-sm font-semibold text-ember/70">

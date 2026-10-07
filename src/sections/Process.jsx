@@ -50,7 +50,7 @@ export default function Process() {
                 sizes="(max-width: 1024px) 80vw, 40vw"
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-forest-deep via-forest-deep/45 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-forest-deep via-forest-deep/45 to-transparent" />
               <div className="relative p-9">
                 <span className="font-display text-[5.5rem] font-extrabold leading-none text-ember/25">
                   {n}
