@@ -146,6 +146,7 @@ export default function Hero() {
         muted
         playsInline
         poster="/video/hero-poster.jpg"
+        aria-hidden="true"
       >
         <source src="/video/hero.mp4" type="video/mp4" />
       </video>
@@ -212,10 +213,10 @@ export default function Hero() {
 
       {/* bottom meta + scroll cue */}
       <div className="absolute inset-x-0 bottom-7 z-[2] mx-auto flex max-w-7xl items-end justify-between px-6 md:px-10">
-        <span className="hidden font-body text-xs uppercase tracking-widest2 text-sand/45 sm:block">
+        <span className="hidden font-body text-xs uppercase tracking-widest2 text-sand/60 sm:block">
           Recruited · Screened · Fully compliant
         </span>
-        <div className="flex items-center gap-2 text-sand/45">
+        <div className="flex items-center gap-2 text-sand/60">
           <span className="font-body text-xs uppercase tracking-widest2">Scroll</span>
           <span className="h-8 w-px animate-pulse bg-linear-to-b from-ember to-transparent" />
         </div>

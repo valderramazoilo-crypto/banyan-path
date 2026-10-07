@@ -38,7 +38,7 @@ export default function Services() {
               <p className="mt-3 font-body leading-relaxed text-sand/60">
                 {desc}
               </p>
-              <span className="mt-6 inline-flex items-center gap-1.5 font-body text-sm font-medium text-sand/40 transition-colors group-hover:text-ember">
+              <span className="mt-6 inline-flex items-center gap-1.5 font-body text-sm font-medium text-sand/60 transition-colors group-hover:text-ember">
                 Request
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path

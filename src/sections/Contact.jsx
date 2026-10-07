@@ -36,12 +36,12 @@ export default function Contact() {
 
       <footer className="relative mt-28 w-full max-w-7xl pt-8">
         <div className="hairline absolute left-0 top-0" />
-        <div className="flex flex-col items-center justify-between gap-4 text-sand/50 sm:flex-row">
-          <a href="#top">
+        <div className="flex flex-col items-center justify-between gap-4 text-sand/60 sm:flex-row">
+          <a href="#top" aria-label="Banyan Path — back to top" className="-my-2 inline-block py-2">
             <Logo className="h-6" />
           </a>
           <span className="font-body text-xs uppercase tracking-widest2">
-            All we do is staffing · Florida · 2026
+            All we do is staffing · Florida · {new Date().getFullYear()}
           </span>
         </div>
       </footer>

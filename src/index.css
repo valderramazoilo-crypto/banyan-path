@@ -86,14 +86,6 @@ body {
   overflow-x: hidden;
 }
 
-/* The 3D hero banner fills the hero section and scrolls away with it. */
-.hero-canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
 .content-layer {
   position: relative;
   z-index: 1;
@@ -157,10 +149,6 @@ body {
   .display-xl {
     @apply font-display font-extrabold leading-[0.95] tracking-tightest;
   }
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(180deg, #f5efdd 0%, #cdb98a 100%);
-  }
   .btn-ember {
     @apply relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-ember px-7 py-3 font-display font-semibold text-forest-deep transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-8px_rgba(255,158,48,0.7)];
   }
@@ -173,9 +161,6 @@ body {
   }
   .btn-ghost {
     @apply inline-flex items-center gap-2 rounded-full border border-sand/25 px-7 py-3 font-display font-medium text-sand/90 backdrop-blur-xs transition-all duration-300 hover:border-ember hover:text-ember hover:bg-ember/5;
-  }
-  .glass {
-    @apply border border-sand/10 bg-forest/30 backdrop-blur-md;
   }
   .hairline {
     @apply h-px w-full bg-linear-to-r from-transparent via-sand/15 to-transparent;

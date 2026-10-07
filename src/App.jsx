@@ -1,5 +1,6 @@
 import { usePath } from './router'
 import ParticleField from './components/ParticleField'
+import ErrorBoundary from './components/ErrorBoundary'
 import Landing from './Landing'
 import ContactPage from './pages/ContactPage'
 import NotFound from './pages/NotFound'
@@ -12,7 +13,8 @@ export default function App() {
   return (
     <>
       <ParticleField />
-      {page}
+      {/* keyed by path so a crash on one page resets when navigating away */}
+      <ErrorBoundary key={path}>{page}</ErrorBoundary>
       <div className="grain" />
     </>
   )

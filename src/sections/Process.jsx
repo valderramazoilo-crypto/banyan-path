@@ -52,7 +52,7 @@ export default function Process() {
               />
               <div className="absolute inset-0 bg-linear-to-t from-forest-deep via-forest-deep/45 to-transparent" />
               <div className="relative p-9">
-                <span className="font-display text-[5.5rem] font-extrabold leading-none text-ember/25">
+                <span aria-hidden="true" className="font-display text-[5.5rem] font-extrabold leading-none text-ember/25">
                   {n}
                 </span>
                 <h3 className="mt-1 font-display text-3xl font-bold text-sand">{title}</h3>
