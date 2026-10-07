@@ -1,52 +1,61 @@
-# Banyan Path — Interactive 3D Landing
+# Banyan Path — Landing
 
-Web premium e interactiva para **Banyan Path** (staffing / reclutamiento para la
-industria hotelera). El concepto visual nace del árbol banyan: una *red viva de
-conexiones profesionales* que crece soltando raíces.
+Web de **Banyan Path**: soluciones de personal para hotelería y restaurantes en
+Florida ("All we do is staffing"). SPA de dos páginas: landing (`/`) y
+contacto (`/contact`). Copy en inglés.
 
 ## Stack
 
-- **Vite + React** — SPA rápida
-- **React Three Fiber + three.js** — escena 3D
-- **@react-three/postprocessing** — bloom + vignette
-- **GSAP + ScrollTrigger** — reveals y sección de proceso pineada
-- **Tailwind CSS** — tokens de marca
+- **Vite 7 + React 18** — SPA
+- **Tailwind CSS 4** (`@tailwindcss/vite`) — tokens de marca en `tailwind.config.js`,
+  cargados desde `src/index.css` con `@config`
+- **GSAP + Lenis** — smooth scroll y la sección *Process* pineada
+- **Router propio** (`src/router.jsx`, sin dependencias) — `Link`, `navigate`, `usePath`
+- Sin backend: el contacto es solo informativo (teléfonos, horario, oficina, email)
 
 ## Lo interactivo
 
-- **Árbol banyan generativo** que *crece con el scroll* (shaders custom: cada
-  segmento aparece según un valor `aGrowth`; un glow naranja recorre el borde
-  que crece).
-- **Reactivo al cursor** — el árbol se inclina hacia el puntero y la cámara hace
-  parallax.
-- **Cámara cinematográfica** — viaja desde la base hasta la copa al hacer scroll.
-- **Sección "Proceso" pineada** con scroll horizontal (GSAP).
-- **Reveals escalonados** en cada sección.
+- **Hero con video** (`public/video/hero.mp4`, 1080p, con `hero-poster.jpg`) y parallax suave.
+- **Galería "agua"** — `WaterCard` distorsiona la imagen con WebGL al pasar el cursor.
+- **Tarjetas con tilt 3D** (`TiltCard`) y campo de partículas de fondo (`ParticleField`).
+- **Reveals** con `IntersectionObserver` + transiciones CSS (`.reveal` → `.in`).
+- Respeta `prefers-reduced-motion`.
+- `ErrorBoundary` por página: si algo falla, se muestra un mensaje con enlace a
+  inicio en lugar de una pantalla vacía.
 
-## Identidad (de la guía de marca)
+## Identidad
 
 | Token | Color | Uso |
 |-------|-------|-----|
-| `forest` | `#1E2818` | Texto / contraste |
-| `sand` | `#EBE0C2` | Fondos / calma |
+| `forest` / `forest-deep` | `#1E2818` / `#141d0f` | Fondos |
+| `sand` | `#EBE0C2` | Texto |
 | `ember` | `#FF9E30` | Acentos / CTAs |
 
-Tipografía: **Exo 2** (secundaria de la marca, vía Google Fonts) + **Montserrat**
-como sustituto libre de *All Round Gothic* (fuente comercial — ver nota abajo).
+Tipografía: **Jost** (Google Fonts) + **Exo 2** (self-hosted en `public/fonts`).
 
 ## Scripts
 
 ```bash
 npm install
 npm run dev      # http://localhost:5174
-npm run build
+npm run build    # salida en dist/
 npm run preview
+node scripts/optimize-images.mjs   # regenera los .webp de public/img (sharp)
 ```
 
-## Pendiente / notas
+## Deploy
 
-- **All Round Gothic** es una fuente de pago. Para producción, licénciala y
-  reemplaza `Montserrat` en `tailwind.config.js` (`fontFamily.display`).
-- Logo: por ahora un isotipo SVG inspirado en la marca. Sustituir por el logo
-  oficial cuando esté disponible en vectorial.
-- El bundle incluye three.js (~330 kB gzip); se puede *code-split* si hace falta.
+Cualquier hosting estático. Al ser SPA, todas las rutas deben servir
+`index.html` — ya incluido para Netlify en `public/_redirects`
+(en Vercel/otros, configurar el rewrite equivalente).
+
+SEO incluido en `index.html`: meta description, Open Graph, canonical,
+theme-color y datos estructurados (`EmploymentAgency` con dirección, teléfonos
+y horario). `public/robots.txt` y `public/sitemap.xml` apuntan a
+`https://banyanpath.com` — **cambiar si el dominio final es otro.**
+
+## Mantenimiento
+
+- `npm audit` → 0 vulnerabilidades (oct 2026).
+- Si cambian teléfonos/horario/dirección, actualizar **ambos**:
+  `src/pages/ContactPage.jsx` y el JSON-LD de `index.html`.
