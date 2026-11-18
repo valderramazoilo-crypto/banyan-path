@@ -77,7 +77,7 @@ export default function Hero() {
       }
       // depth parallax on the video
       if (videoRef.current) {
-        videoRef.current.style.transform = `translate(${(0.5 - cur.x) * 26}px, ${(0.5 - cur.y) * 16}px) scale(1.08)`
+        videoRef.current.style.transform = `translate(${(0.5 - cur.x) * 26}px, ${(0.5 - cur.y) * 16}px)` // zoom headroom comes from the scale-[1.08] class
       }
       // magnetic letters: repel + tilt near the cursor, spring back
       for (let i = 0; i < letters.length; i++) {
@@ -146,13 +146,14 @@ export default function Hero() {
         muted
         playsInline
         poster="/video/hero-poster.jpg"
+        aria-hidden="true"
       >
         <source src="/video/hero.mp4" type="video/mp4" />
       </video>
 
       {/* legibility gradients (kept light so the video shows through) */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#05070a]/90 via-[#05070a]/50 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#080c08]/90 via-transparent to-[#05070a]/35" />
+      <div className="absolute inset-0 bg-linear-to-r from-[#05070a]/90 via-[#05070a]/50 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-[#080c08]/90 via-transparent to-[#05070a]/35" />
 
       {/* cursor flashlight + ember halo */}
       <div
@@ -212,12 +213,12 @@ export default function Hero() {
 
       {/* bottom meta + scroll cue */}
       <div className="absolute inset-x-0 bottom-7 z-[2] mx-auto flex max-w-7xl items-end justify-between px-6 md:px-10">
-        <span className="hidden font-body text-xs uppercase tracking-widest2 text-sand/45 sm:block">
+        <span className="hidden font-body text-xs uppercase tracking-widest2 text-sand/60 sm:block">
           Recruited · Screened · Fully compliant
         </span>
-        <div className="flex items-center gap-2 text-sand/45">
+        <div className="flex items-center gap-2 text-sand/60">
           <span className="font-body text-xs uppercase tracking-widest2">Scroll</span>
-          <span className="h-8 w-px animate-pulse bg-gradient-to-b from-ember to-transparent" />
+          <span className="h-8 w-px animate-pulse bg-linear-to-b from-ember to-transparent" />
         </div>
       </div>
     </section>

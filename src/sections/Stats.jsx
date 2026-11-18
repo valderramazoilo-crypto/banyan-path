@@ -13,7 +13,7 @@ export default function Stats() {
         {stats.map(([n, d]) => (
           <div
             key={d}
-            className="group reveal relative bg-forest-deep/80 p-10 backdrop-blur-sm transition-colors duration-500 hover:bg-forest-mid/50 md:p-12"
+            className="group reveal relative bg-forest-deep/80 p-10 backdrop-blur-xs transition-colors duration-500 hover:bg-forest-mid/50 md:p-12"
           >
             <div className="font-display text-6xl font-extrabold tracking-tightest text-ember md:text-7xl">
               {n}

@@ -19,7 +19,7 @@ export default function Gallery() {
               Hospitality in <span className="text-ember">motion</span>.
             </h2>
           </div>
-          <p className="reveal max-w-xs font-body text-sm leading-relaxed text-sand/50">
+          <p className="reveal max-w-xs font-body text-sm leading-relaxed text-sand/60">
             Move your cursor across the images — the surface ripples like water.
           </p>
         </div>

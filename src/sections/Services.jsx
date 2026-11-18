@@ -26,7 +26,7 @@ export default function Services() {
           {services.map(([title, desc], i) => (
             <article
               key={title}
-              className="reveal group relative overflow-hidden rounded-2xl border border-sand/10 bg-forest/30 p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-ember/40"
+              className="reveal group relative overflow-hidden rounded-2xl border border-sand/10 bg-forest/30 p-8 backdrop-blur-xs transition-all duration-300 hover:-translate-y-2 hover:border-ember/40"
             >
               <div className="absolute inset-0 -z-10 bg-banyan-gradient opacity-0 transition-opacity duration-500 group-hover:opacity-10" />
               <span className="font-display text-sm font-semibold text-ember/70">
@@ -38,7 +38,7 @@ export default function Services() {
               <p className="mt-3 font-body leading-relaxed text-sand/60">
                 {desc}
               </p>
-              <span className="mt-6 inline-flex items-center gap-1.5 font-body text-sm font-medium text-sand/40 transition-colors group-hover:text-ember">
+              <span className="mt-6 inline-flex items-center gap-1.5 font-body text-sm font-medium text-sand/60 transition-colors group-hover:text-ember">
                 Request
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                   <path

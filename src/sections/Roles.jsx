@@ -60,7 +60,7 @@ export default function Roles() {
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="tilt-img absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-forest-deep via-forest-deep/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-forest-deep via-forest-deep/20 to-transparent" />
               <div className="tilt-glow" />
               <div className="absolute inset-x-0 bottom-0 p-7 tilt-pop">
                 <div className="mb-3 h-1 w-8 rounded-full bg-ember transition-all duration-300 group-hover:w-14" />

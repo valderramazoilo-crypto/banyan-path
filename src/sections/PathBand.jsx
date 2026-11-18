@@ -28,7 +28,7 @@ export default function PathBand() {
           {moments.map(([t, d], i) => (
             <div
               key={t}
-              className="group reveal relative rounded-2xl border border-sand/10 bg-forest/40 p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-ember/50 hover:bg-forest-mid/50"
+              className="group reveal relative rounded-2xl border border-sand/10 bg-forest/40 p-7 backdrop-blur-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-ember/50 hover:bg-forest-mid/50"
             >
               <span className="font-display text-sm font-semibold text-ember/70">
                 0{i + 1}

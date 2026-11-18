@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+/* keep the brand tokens (colors, fonts, tracking, gradients) in the JS config */
+@config '../tailwind.config.js';
+
+/* Tailwind v4 preflight resets buttons to cursor:default — restore pointer */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /* --- Body font (self-hosted). Display = Jost via Google Fonts (a license-clean
    geometric match for All Round Gothic; swap in the licensed ARG when available). --- */
@@ -78,14 +86,6 @@ body {
   overflow-x: hidden;
 }
 
-/* The 3D hero banner fills the hero section and scrolls away with it. */
-.hero-canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
 .content-layer {
   position: relative;
   z-index: 1;
@@ -149,28 +149,21 @@ body {
   .display-xl {
     @apply font-display font-extrabold leading-[0.95] tracking-tightest;
   }
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(180deg, #f5efdd 0%, #cdb98a 100%);
-  }
   .btn-ember {
     @apply relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-ember px-7 py-3 font-display font-semibold text-forest-deep transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_40px_-8px_rgba(255,158,48,0.7)];
   }
   .btn-ember::after {
     content: '';
-    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700;
+    @apply absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/40 to-transparent transition-transform duration-700;
   }
   .btn-ember:hover::after {
     @apply translate-x-full;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-full border border-sand/25 px-7 py-3 font-display font-medium text-sand/90 backdrop-blur-sm transition-all duration-300 hover:border-ember hover:text-ember hover:bg-ember/5;
-  }
-  .glass {
-    @apply border border-sand/10 bg-forest/30 backdrop-blur-md;
+    @apply inline-flex items-center gap-2 rounded-full border border-sand/25 px-7 py-3 font-display font-medium text-sand/90 backdrop-blur-xs transition-all duration-300 hover:border-ember hover:text-ember hover:bg-ember/5;
   }
   .hairline {
-    @apply h-px w-full bg-gradient-to-r from-transparent via-sand/15 to-transparent;
+    @apply h-px w-full bg-linear-to-r from-transparent via-sand/15 to-transparent;
   }
 }
 
@@ -179,7 +172,12 @@ body {
 .reveal {
   opacity: 0;
   transform: translateY(40px);
-  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.3s ease,
+    border-color 0.3s ease,
+    background-color 0.3s ease;
   will-change: transform, opacity;
 }
 .reveal.in {
@@ -237,7 +235,9 @@ body {
   .title-accent {
     animation: none;
   }
-  .reveal {
+  .reveal,
+  .tilt.reveal,
+  .tilt.reveal.in {
     opacity: 1;
     transform: none;
     transition: none;
@@ -249,6 +249,17 @@ body {
   transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* tilt cards that also reveal-on-scroll: rise in, then keep the 3D tilt
+   (plain `.reveal.in { transform: none }` would otherwise cancel the tilt) */
+.tilt.reveal {
+  transform: perspective(1000px) translateY(40px);
+  transition:
+    opacity 0.9s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tilt.reveal.in {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
 }
 .tilt-img {
   transform: translate(var(--tx, 0), var(--ty, 0)) scale(1.12);

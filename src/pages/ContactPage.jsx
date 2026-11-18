@@ -5,12 +5,16 @@ import Logo from '../components/Logo'
 const iconCls = 'grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember/15 text-ember'
 
 export default function ContactPage() {
-  useEffect(() => window.scrollTo(0, 0), [])
+  // block body: modern scrollTo() returns a Promise, which React would try to
+  // call as the effect cleanup on unmount (crashing the whole app)
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   return (
     <div className="content-layer flex min-h-dvh flex-col">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-        <Link to="/" aria-label="Back to home" className="transition-opacity hover:opacity-80">
+        <Link to="/" aria-label="Back to home" className="-my-2 inline-block py-2 transition-opacity hover:opacity-80">
           <Logo className="h-7" />
         </Link>
         <Link
@@ -38,7 +42,7 @@ export default function ContactPage() {
         {/* info grid */}
         <div className="mt-16 grid gap-px overflow-hidden rounded-3xl border border-sand/10 bg-sand/10 md:grid-cols-3">
           {/* contacts */}
-          <div className="bg-forest-deep/80 p-9 backdrop-blur-sm">
+          <div className="bg-forest-deep/80 p-9 backdrop-blur-xs">
             <div className="mb-6 flex items-center gap-3">
               <span className={iconCls}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -69,7 +73,7 @@ export default function ContactPage() {
           </div>
 
           {/* work hours */}
-          <div className="bg-forest-deep/80 p-9 backdrop-blur-sm">
+          <div className="bg-forest-deep/80 p-9 backdrop-blur-xs">
             <div className="mb-6 flex items-center gap-3">
               <span className={iconCls}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -82,14 +86,14 @@ export default function ContactPage() {
               </h2>
             </div>
             <ul className="space-y-3 font-body text-sand/80">
-              <li className="flex justify-between gap-4"><span>Monday – Friday</span><span className="text-sand/55">9am – 5pm</span></li>
-              <li className="flex justify-between gap-4"><span>Saturday</span><span className="text-sand/55">9am – 1pm</span></li>
-              <li className="flex justify-between gap-4"><span>Sunday &amp; Holidays</span><span className="text-sand/55">Closed</span></li>
+              <li className="flex justify-between gap-4"><span>Monday – Friday</span><span className="text-sand/60">9am – 5pm</span></li>
+              <li className="flex justify-between gap-4"><span>Saturday</span><span className="text-sand/60">9am – 1pm</span></li>
+              <li className="flex justify-between gap-4"><span>Sunday &amp; Holidays</span><span className="text-sand/60">Closed</span></li>
             </ul>
           </div>
 
           {/* office */}
-          <div className="bg-forest-deep/80 p-9 backdrop-blur-sm">
+          <div className="bg-forest-deep/80 p-9 backdrop-blur-xs">
             <div className="mb-6 flex items-center gap-3">
               <span className={iconCls}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -124,7 +128,7 @@ export default function ContactPage() {
       </main>
 
       <footer className="mx-auto w-full max-w-6xl px-6 pb-10 md:px-10">
-        <p className="font-body text-xs uppercase tracking-widest2 text-sand/40">
+        <p className="font-body text-xs uppercase tracking-widest2 text-sand/60">
           All we do is staffing · Florida
         </p>
       </footer>

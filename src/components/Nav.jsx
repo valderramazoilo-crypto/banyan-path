@@ -41,7 +41,7 @@ export default function Nav() {
           scrolled ? 'py-3.5' : 'py-5'
         }`}
       >
-        <a href="#top" className="transition-opacity hover:opacity-80">
+        <a href="#top" aria-label="Banyan Path — back to top" className="-my-2 inline-block py-2 transition-opacity hover:opacity-80">
           <Logo className="h-7" />
         </a>
 
@@ -106,7 +106,7 @@ export default function Nav() {
               Contact us
             </Link>
           </nav>
-          <p className="pb-10 text-center font-body text-xs uppercase tracking-widest2 text-sand/40">
+          <p className="pb-10 text-center font-body text-xs uppercase tracking-widest2 text-sand/60">
             All we do is staffing · Florida
           </p>
         </div>
